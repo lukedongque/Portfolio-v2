@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Luke Dongque | Portfolio</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <!-- ══════════════════════ NAV ══════════════════════ -->
+    <header class="nav-wrapper">
+      <nav class="nav container">
+        <ul class="nav__links">
+          <li><a href="#about" class="nav__link">About</a></li>
+          <li><a href="#skills" class="nav__link">Skills</a></li>
+          <li><a href="#projects" class="nav__link">Projects</a></li>
+          <li><a href="#contact" class="nav__link">Contact</a></li>
+        </ul>
+        <button class="nav__hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- ══════════════════════ HERO ══════════════════════ -->
+      <section id="hero" class="hero section">
+        <div class="container hero__inner">
+          <p class="hero__label">Hi, I'm</p>
+          <h1 class="hero__name">Luke Dongque</h1>
+          <p class="hero__tagline">
+            Full Stack Developer in Progress <span class="cursor">|</span>
+          </p>
+          <p class="hero__sub">
+            Building things for the web — one line at a time.
+          </p>
+          <div class="hero__cta">
+            <a href="#projects" class="btn btn--primary">View Projects</a>
+            <a href="#contact" class="btn btn--outline">Contact Me</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════ ABOUT ══════════════════════ -->
+      <section id="about" class="about section">
+        <div class="container">
+          <h2 class="section__title">About Me</h2>
+          <div class="about__grid">
+            <div class="about__photo-wrapper">
+              <div class="about__photo-placeholder">
+                <span>[ photo ]</span>
+              </div>
+            </div>
+
+            <div class="about__content">
+              <p class="about__text">
+                Hey! I'm Luke, a full stack developer in progress with a passion
+                for clean code, creative UIs, and building things that actually
+                work.
+              </p>
+              <p class="about__text">
+                I love tinkering with web technologies and turning ideas into
+                polished digital experiences. Currently leveling up my skills in
+                both frontend and backend development.
+              </p>
+              <ul class="about__facts">
+                <li class="fact">
+                  <span class="fact__key">// location</span>&nbsp; Philippines
+                  🇵🇭
+                </li>
+                <li class="fact">
+                  <span class="fact__key">// status</span>&nbsp; Open to
+                  opportunities
+                </li>
+                <li class="fact">
+                  <span class="fact__key">// interest</span>&nbsp; Web dev, UI
+                  design, gaming
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════ SKILLS ══════════════════════ -->
+      <section id="skills" class="skills section">
+        <div class="container">
+          <h2 class="section__title">Skills</h2>
+
+          <div class="skills__group">
+            <h3 class="skills__group-label">Frontend</h3>
+            <div class="skills__grid">
+              <div class="skill-badge">HTML</div>
+              <div class="skill-badge">CSS</div>
+              <div class="skill-badge">JavaScript</div>
+              <div class="skill-badge">React</div>
+              <div class="skill-badge">Tailwind</div>
+            </div>
+          </div>
+
+          <div class="skills__group">
+            <h3 class="skills__group-label">Backend</h3>
+            <div class="skills__grid">
+              <div class="skill-badge">Node.js</div>
+              <div class="skill-badge">Express</div>
+              <div class="skill-badge">Python</div>
+              <div class="skill-badge">SQL</div>
+            </div>
+          </div>
+
+          <div class="skills__group">
+            <h3 class="skills__group-label">Tools</h3>
+            <div class="skills__grid">
+              <div class="skill-badge">Git</div>
+              <div class="skill-badge">GitHub</div>
+              <div class="skill-badge">VS Code</div>
+              <div class="skill-badge">Figma</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════ PROJECTS ══════════════════════ -->
+      <section id="projects" class="projects section">
+        <div class="container">
+          <h2 class="section__title">Projects</h2>
+          <div class="projects__grid">
+            <article class="project-card">
+              <div class="project-card__thumb">[ preview ]</div>
+              <div class="project-card__body">
+                <h3 class="project-card__title">Project Alpha</h3>
+                <p class="project-card__desc">
+                  A cool web app I built to solve a real problem. Short
+                  description goes here — keep it punchy.
+                </p>
+                <div class="project-card__tags">
+                  <span class="tag">React</span>
+                  <span class="tag">Node.js</span>
+                  <span class="tag">MongoDB</span>
+                </div>
+                <div class="project-card__links">
+                  <a href="#" class="btn btn--sm btn--outline">Live Demo</a>
+                  <a href="#" class="btn btn--sm btn--ghost">GitHub</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div class="project-card__thumb">[ preview ]</div>
+              <div class="project-card__body">
+                <h3 class="project-card__title">Project Beta</h3>
+                <p class="project-card__desc">
+                  Backend-focused project with REST API integration and database
+                  management. Add your real description here.
+                </p>
+                <div class="project-card__tags">
+                  <span class="tag">Python</span>
+                  <span class="tag">Express</span>
+                  <span class="tag">SQL</span>
+                </div>
+                <div class="project-card__links">
+                  <a href="#" class="btn btn--sm btn--outline">Live Demo</a>
+                  <a href="#" class="btn btn--sm btn--ghost">GitHub</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-card">
+              <div class="project-card__thumb">[ preview ]</div>
+              <div class="project-card__body">
+                <h3 class="project-card__title">Project Gamma</h3>
+                <p class="project-card__desc">
+                  A UI-focused project with smooth interactions and great
+                  design. Replace with your real project details.
+                </p>
+                <div class="project-card__tags">
+                  <span class="tag">HTML</span>
+                  <span class="tag">CSS</span>
+                  <span class="tag">JS</span>
+                </div>
+                <div class="project-card__links">
+                  <a href="#" class="btn btn--sm btn--outline">Live Demo</a>
+                  <a href="#" class="btn btn--sm btn--ghost">GitHub</a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════ CONTACT ══════════════════════ -->
+      <section id="contact" class="contact section">
+        <div class="container contact__inner">
+          <h2 class="section__title">Contact</h2>
+          <p class="contact__sub">
+            Have a project in mind or just want to say hi? Drop me a message.
+          </p>
+
+          <form class="contact__form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="name">Name</label>
+              <input
+                class="form-input"
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Your name"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email</label>
+              <input
+                class="form-input"
+                type="email"
+                id="email"
+                name="email"
+                placeholder="your@email.com"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="message">Message</label>
+              <textarea
+                class="form-input form-input--textarea"
+                id="message"
+                name="message"
+                placeholder="What's up?"
+              ></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary btn--full">
+              Send Message
+            </button>
+          </form>
+
+          <div class="contact__socials">
+            <a href="#" class="social-link">GitHub</a>
+            <a href="#" class="social-link">LinkedIn</a>
+            <a href="#" class="social-link">Twitter / X</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ══════════════════════ FOOTER ══════════════════════ -->
+    <footer class="footer">
+      <div class="container footer__inner">
+        <p class="footer__text">
+          © 2026 Luke Dongque — Built with ☕ and curiosity.
+        </p>
+        <a href="#hero" class="footer__top">↑ Back to top</a>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
