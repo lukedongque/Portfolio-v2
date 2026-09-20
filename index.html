@@ -14,8 +14,16 @@
     />
 
     <link rel="stylesheet" href="app.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
+    <!-- ══════════════════════ PARTICLES BG ══════════════════════ -->
+    <canvas id="particles"></canvas>
+
+    <!-- ══════════════════════ CUSTOM CURSOR ══════════════════════ -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
     <!-- ══════════════════════ NAV ══════════════════════ -->
     <header class="nav-wrapper">
       <nav class="nav container">
@@ -23,6 +31,7 @@
           <li><a href="#about" class="nav__link">About</a></li>
           <li><a href="#skills" class="nav__link">Skills</a></li>
           <li><a href="#projects" class="nav__link">Projects</a></li>
+          <li><a href="#civilization" class="nav__link">Civilization</a></li>
           <li><a href="#contact" class="nav__link">Contact</a></li>
         </ul>
         <button class="nav__hamburger" aria-label="Toggle menu">
@@ -197,6 +206,35 @@
         </div>
       </section>
 
+      <!-- ══════════════════════ CIVILIZATION ══════════════════════ -->
+      <section id="civilization" class="civilization section">
+        <div class="container">
+          <h2 class="section__title">Civilization</h2>
+          <p class="civilization__sub">
+            Every visitor spawns a unique character. Together, they're building
+            a world.
+          </p>
+          <div class="civilization__preview">
+            <canvas id="civ-preview-canvas"></canvas>
+            <div class="civilization__hud">
+              <div class="civilization__hud-left">
+                <span class="civilization__population"
+                  >🏘️ <span id="pop-count">0</span> villagers</span
+                >
+                <span class="civilization__era" id="era-label"
+                  >Campsite Era</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="civilization__cta">
+            <a href="civilization.html" class="btn btn--primary"
+              >Enter the Civilization →</a
+            >
+          </div>
+        </div>
+      </section>
+
       <!-- ══════════════════════ CONTACT ══════════════════════ -->
       <section id="contact" class="contact section">
         <div class="container contact__inner">
@@ -258,7 +296,10 @@
         <a href="#hero" class="footer__top">↑ Back to top</a>
       </div>
     </footer>
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="civ-engine.js"></script>
+    <script src="civ-preview.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

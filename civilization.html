@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lukeville | Mini Civilization</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="civilization.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body class="civ-body">
+    <!-- Main Canvas -->
+    <canvas
+      id="civ-canvas"
+      class="civ-canvas"
+      aria-label="Mini Civilization interactive village"
+    ></canvas>
+
+    <!-- HUD Overlay -->
+    <div class="civ-hud">
+      <!-- Top Left Panel: Village Info -->
+      <div class="civ-hud__panel civ-hud__top-left">
+        <h1 class="civ-hud__village-name">Lukeville</h1>
+        <div class="civ-hud__population">
+          Population: <span id="full-pop-count">0</span>
+        </div>
+        <div class="civ-hud__era">
+          Era: <span id="full-era-label">Campsite Era</span>
+        </div>
+        <div class="era-progress" aria-label="Progress to next era">
+          <div class="era-progress__fill"></div>
+        </div>
+      </div>
+
+      <!-- Top Right Panel: Time Indicator -->
+      <div class="civ-hud__panel civ-hud__top-right">
+        <span id="time-indicator" class="civ-hud__time">☀️ Day</span>
+      </div>
+
+      <!-- Bottom Left Panel: Character Info -->
+      <div class="civ-hud__panel civ-hud__bottom-left civ-char">
+        <canvas
+          id="char-portrait"
+          width="64"
+          height="64"
+          class="civ-char__portrait"
+          aria-label="Character portrait"
+        ></canvas>
+        <div class="civ-char__info">
+          <span id="char-name" class="civ-char__name"></span>
+          <span id="char-role" class="civ-char__role"></span>
+          <span id="char-joined" class="civ-char__joined"></span>
+        </div>
+      </div>
+
+      <!-- Bottom Right Panel: Controls -->
+      <div class="civ-hud__panel civ-hud__bottom-right">
+        <button id="sound-toggle">🔇 Sound</button>
+        <a href="index.html" class="civ-hud__back">← Back to Portfolio</a>
+      </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="first-visit-tooltip" aria-hidden="true">
+      🖱️ Drag characters to reposition them!
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="civ-engine.js"></script>
+    <script src="civ-fullpage.js"></script>
+  </body>
+</html>

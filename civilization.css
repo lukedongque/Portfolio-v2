@@ -1,0 +1,308 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   CIVILIZATION PAGE STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Base Reset ── */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body {
+    background-color: #0c0c0f;
+    color: #ffffff;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.6rem;
+    overflow: hidden;
+}
+
+/* Canvas */
+#civ-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    cursor: default;
+}
+
+/* Day/Night Overlay */
+#day-night-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    transition: background-color 2s ease;
+}
+
+/* Dragging State */
+body.dragging,
+body.dragging #civ-canvas {
+    cursor: grabbing;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HUD PANELS
+   ══════════════════════════════════════════════════════════════════════════ */
+.civ-hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.civ-hud__panel {
+    background: rgba(12, 12, 15, 0.85);
+    background: color-mix(in srgb, var(--black, #0c0c0f) 85%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1.6rem 2rem;
+    pointer-events: auto;
+}
+
+.civ-hud__top-left {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+}
+
+.civ-hud__top-right {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+}
+
+.civ-hud__bottom-left {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+}
+
+.civ-hud__bottom-right {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+/* Village Info (Top Left) */
+.civ-hud__village-name {
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 2.4rem;
+    color: var(--white, #ffffff);
+    margin-bottom: 0.4rem;
+}
+
+.civ-hud__population {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--grey-base, #495057);
+    margin-bottom: 0.8rem;
+}
+
+.civ-hud__era {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--grey-tint, #f1f3f5);
+    margin-bottom: 0.8rem;
+}
+
+.era-progress {
+    height: 4px;
+    background: var(--grey-shade, #212529);
+    border-radius: 2px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.era-progress__fill {
+    height: 100%;
+    background: var(--grey-tint, #f1f3f5);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+/* Time Indicator (Top Right) */
+.civ-hud__time {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--grey-tint, #f1f3f5);
+}
+
+/* Character Card (Bottom Left) */
+.civ-char {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+}
+
+.civ-char__portrait {
+    width: 6.4rem;
+    height: 6.4rem;
+    border: 2px solid var(--grey-base, #495057);
+    border-radius: 4px;
+    image-rendering: pixelated;
+}
+
+.civ-char__info {
+    display: flex;
+    flex-direction: column;
+}
+
+.civ-char__name {
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 1.8rem;
+    color: var(--white, #ffffff);
+}
+
+.civ-char__role {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--grey-base, #495057);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.civ-char__joined {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--grey-base, #495057);
+}
+
+/* Bottom Right Controls */
+#sound-toggle {
+    background: transparent;
+    border: 1px solid var(--grey-shade, #212529);
+    color: var(--grey-base, #495057);
+    font-family: 'Space Mono', monospace;
+    font-size: 1.2rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#sound-toggle:hover {
+    border-color: var(--grey-base, #495057);
+    color: var(--white, #ffffff);
+}
+
+.civ-hud__back {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--grey-base, #495057);
+    transition: color 0.2s ease;
+    text-decoration: none;
+}
+
+.civ-hud__back:hover {
+    color: var(--white, #ffffff);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TOOLTIPS
+   ══════════════════════════════════════════════════════════════════════════ */
+#first-visit-tooltip {
+    position: fixed;
+    top: 60%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--grey-tint, #f1f3f5);
+    background: rgba(12, 12, 15, 0.95);
+    display: none;
+    pointer-events: none;
+}
+
+#first-visit-tooltip.visible {
+    display: block;
+    animation: tooltipFade 0.5s ease forwards;
+}
+
+@keyframes tooltipFade {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN (MAX-WIDTH: 768PX)
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .civ-hud__panel {
+        padding: 1.2rem 1.6rem;
+    }
+
+    .civ-hud__village-name {
+        font-size: 2rem;
+    }
+
+    .civ-hud__population,
+    .civ-hud__time,
+    #first-visit-tooltip {
+        font-size: 1.2rem;
+    }
+
+    .civ-char__portrait {
+        width: 4.8rem;
+        height: 4.8rem;
+    }
+
+    .civ-char__name {
+        font-size: 1.6rem;
+    }
+
+    .civ-char__role,
+    .civ-hud__back,
+    #sound-toggle {
+        font-size: 1.1rem;
+    }
+
+    .civ-hud__top-left {
+        top: 1rem;
+        left: 1rem;
+    }
+
+    .civ-hud__top-right {
+        top: 1rem;
+        right: 1rem;
+    }
+
+    .civ-hud__bottom-left,
+    .civ-hud__bottom-right {
+        bottom: 1rem;
+        position: fixed;
+    }
+
+    .civ-hud__bottom-left {
+        left: 1rem;
+        right: auto;
+    }
+
+    .civ-hud__bottom-right {
+        right: 1rem;
+        flex-direction: row;
+        align-items: center;
+        gap: 1.2rem;
+    }
+
+    #sound-toggle,
+    .civ-hud__back {
+        padding: 1rem 1.6rem; /* Touch-friendly tap targets */
+    }
+}
