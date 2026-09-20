@@ -11,9 +11,13 @@ const onScroll = () => {
     const id = section.getAttribute("id");
     const link = document.querySelector(`.nav__link[href="#${id}"]`);
     if (link) {
-      if (scrollY >= top && scrollY < bottom) {
+      if (id === "hero") {
         navLinks.forEach((l) => l.classList.remove("active"));
-        link.classList.add("active");
+      } else {
+        if (scrollY >= top && scrollY < bottom) {
+          navLinks.forEach((l) => l.classList.remove("active"));
+          link.classList.add("active");
+        }
       }
     }
   });
@@ -238,7 +242,7 @@ form.addEventListener("submit", (e) => {
 
   // interactive elements — expand ring on hover
   const interactiveSelectors =
-    "a, button, .btn, .skill-badge, .project-card, .nav__hamburger, input, textarea";
+    "a, button, .btn, .skill-badge, .project-card, .nav__hamburger, input, textarea, .typing-test-badge";
 
   document.addEventListener("mouseover", (e) => {
     if (e.target.closest(interactiveSelectors)) {
