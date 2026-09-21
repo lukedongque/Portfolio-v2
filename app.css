@@ -257,10 +257,16 @@ img {
   display: flex;
   align-items: center;
   padding-top: var(--nav-height);
+  perspective: 1400px;
+  perspective-origin: 50% 40%;
+  position: relative;
+  overflow: visible;
 }
 
 .hero__inner {
   max-width: 80rem;
+  transform-style: preserve-3d;
+  position: relative;
 }
 
 .hero__label {
@@ -268,6 +274,7 @@ img {
   font-size: var(--text-h5);
   color: var(--grey-base);
   margin-bottom: 0.8rem;
+  min-height: 1.2em;
 }
 
 .hero__name {
@@ -276,6 +283,11 @@ img {
   line-height: var(--line-height-tight);
   color: var(--white);
   margin-bottom: 1.6rem;
+  letter-spacing: -1px;
+  cursor: pointer;
+  user-select: none;
+  display: inline-block;
+  min-height: 1.2em;
 }
 
 .hero__tagline {
@@ -283,6 +295,7 @@ img {
   font-size: var(--text-h4);
   color: var(--grey-tint);
   margin-bottom: 1.2rem;
+  min-height: 1.3em;
 }
 
 .hero__sub {
@@ -290,19 +303,109 @@ img {
   color: var(--grey-base);
   margin-bottom: 4rem;
   max-width: 55rem;
+  min-height: 1.5em;
 }
 
+/* Word and Character wrappers for letter animation */
+.hero-word {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.hero-char {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  opacity: 1;
+}
+
+.hero-char.is-formed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1) !important;
+  filter: none !important;
+}
+
+/* Snap lock-in effect for the headline characters */
+.hero__name .hero-char.is-locked {
+  animation: charLockIn 0.4s ease-out forwards;
+}
+
+@keyframes charLockIn {
+  0% {
+    text-shadow: 0 0 22px rgba(255, 255, 255, 0.95), 0 0 38px rgba(255, 255, 255, 0.6);
+    color: #fff;
+  }
+  100% {
+    text-shadow: none;
+    color: var(--white);
+  }
+}
+
+/* Interactive hover on hero name characters */
+.hero__name:hover .hero-char:hover {
+  transform: translateY(-4px) scale(1.12) !important;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  transition: transform 0.2s ease, text-shadow 0.2s ease;
+}
+
+/* CTA buttons entrance transition */
 .hero__cta {
   display: flex;
   gap: 1.6rem;
   flex-wrap: wrap;
+  align-items: center;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero__cta.is-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Subtle replay button */
+.hero__replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: transparent;
+  border: 1px solid var(--grey-shade);
+  color: var(--grey-base);
+  font-family: var(--font-family-2);
+  font-size: var(--text-sm);
+  padding: 1.1rem 1.6rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.hero__replay-btn:hover {
+  border-color: var(--grey-base);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hero__replay-btn svg {
+  transition: transform 0.4s ease;
+}
+
+.hero__replay-btn:hover svg {
+  transform: rotate(-180deg);
 }
 
 /* blinking cursor */
 .cursor {
   color: var(--grey-tint);
   animation: blink 1s step-end infinite;
+  display: inline-block;
+  opacity: 1;
 }
+
 @keyframes blink {
   0%,
   100% {
@@ -310,6 +413,23 @@ img {
   }
   50% {
     opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-char {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+  .hero__cta {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .cursor {
+    opacity: 1 !important;
   }
 }
 

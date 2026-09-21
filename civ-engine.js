@@ -157,19 +157,28 @@ const CivEngine = (() => {
     "Root","Leaf","Bark","Thorn","Bloom","Seed","Petal","Dew","Mist","Rain",
   ];
 
+  /* ── Strict Game Boy 4-color palette ── */
+  const GB = {
+    BLACK: "#0c0c0f",  // darkest
+    DARK:  "#5a5a5a",  // dark grey
+    LIGHT: "#a8a8a8",  // light grey
+    WHITE: "#f1f3f5",  // lightest
+  };
+
+  // Character variation arrays — mapped to GB palette at render time
   const SKIN_TONES = [
-    "#fde0c5", "#f5c5a3", "#d4a373", "#b07d56", "#8b5e3c", "#5c3a21",
+    GB.WHITE, GB.WHITE, GB.LIGHT, GB.LIGHT, GB.DARK, GB.DARK,
   ];
 
   const HAIR_COLORS = [
-    "#2c1810", "#4a2c17", "#8b4513", "#d2691e", "#daa520",
-    "#f5deb3", "#cd5c5c", "#708090", "#c0c0c0", "#1a1a2e",
+    GB.BLACK, GB.BLACK, GB.DARK, GB.DARK, GB.BLACK,
+    GB.DARK, GB.BLACK, GB.BLACK, GB.DARK, GB.BLACK,
   ];
 
   const OUTFIT_COLORS = [
-    "#c0392b", "#2980b9", "#27ae60", "#8e44ad", "#d35400",
-    "#16a085", "#2c3e50", "#7f8c8d", "#f39c12", "#1abc9c",
-    "#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#e67e22",
+    GB.WHITE, GB.LIGHT, GB.DARK, GB.WHITE, GB.LIGHT,
+    GB.DARK, GB.WHITE, GB.LIGHT, GB.DARK, GB.WHITE,
+    GB.LIGHT, GB.DARK, GB.WHITE, GB.LIGHT, GB.DARK,
   ];
 
   const ROLES_BY_ERA = {
@@ -220,429 +229,834 @@ const CivEngine = (() => {
   /* ─────────────────────────────────────────────────────
      MODULE 4 — PIXEL-ART RENDERER
   ───────────────────────────────────────────────────── */
+  /* ── 45-degree diagonal hatching helper (1-bit shading texture) ── */
+  function drawHatch(ctx, x, y, w, h, s, color) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    ctx.strokeStyle = color || GB.BLACK;
+    ctx.lineWidth = 1 * s;
+    for (let d = -h; d < w + h; d += 4 * s) {
+      ctx.beginPath();
+      ctx.moveTo(x + d, y);
+      ctx.lineTo(x + d + h, y + h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* ─────────────────────────────────────────────────────
+     MODULE 4 — RETRO SCI-FI PIXEL-ART RENDERER
+  ───────────────────────────────────────────────────── */
   const PixelArt = {
-    /** Draw a character at a screen position.
+    /** Draw cute chibi sci-fi characters matching the reference image.
      *  char = visitor DB row, frame = animation frame index */
     drawCharacter(ctx, char, sx, sy, scale, frame, facingRight) {
-      const s = scale; // pixel size
-      const skinColor = SKIN_TONES[char.skin_tone] || SKIN_TONES[0];
-      const hairColor = HAIR_COLORS[char.hair_color] || HAIR_COLORS[0];
-      const outfitColor = char.outfit_color || OUTFIT_COLORS[0];
-      const accentColor = char.accent_color || OUTFIT_COLORS[1];
+      const s = scale;
+      const BLK = GB.BLACK;
+      const WHT = GB.WHITE;
+      const GRY = GB.DARK;
+      const LGT = GB.LIGHT;
 
       ctx.save();
 
-      // flip if facing left
+      // Horizontal flip around center axis (8*s)
       if (!facingRight) {
         ctx.translate(sx + 8 * s, 0);
         ctx.scale(-1, 1);
         ctx.translate(-(sx + 8 * s), 0);
       }
 
-      // ── Shadow ──
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.fillRect(sx + 2 * s, sy + 15 * s, 12 * s, 2 * s);
+      // ── Solid Chunky Black Drop Shadow Pill ──
+      ctx.fillStyle = BLK;
+      ctx.fillRect(sx + 2 * s, sy + 14 * s, 12 * s, 2 * s);
 
-      // ── Feet / walk animation ──
-      const walkOffset = frame % 4;
-      const leftFootX = walkOffset === 1 ? 4 : 5;
-      const rightFootX = walkOffset === 3 ? 10 : 9;
-      ctx.fillStyle = "#2c1810";
-      ctx.fillRect(sx + leftFootX * s, sy + 14 * s, 2 * s, 2 * s);
-      ctx.fillRect(sx + rightFootX * s, sy + 14 * s, 2 * s, 2 * s);
+      // Walk bounce animation (1px vertical bob)
+      const walkBob = (frame % 2 === 1) ? -1 : 0;
+      const dy = sy + walkBob * s;
 
-      // ── Legs ──
-      ctx.fillStyle = "#3d3d56";
-      ctx.fillRect(sx + 5 * s, sy + 12 * s, 2 * s, 2 * s);
-      ctx.fillRect(sx + 9 * s, sy + 12 * s, 2 * s, 2 * s);
+      // Species derived deterministically from hair_style / fingerprint
+      const species = Math.abs(char.hair_style) % 8;
 
-      // ── Body ──
-      ctx.fillStyle = outfitColor;
-      ctx.fillRect(sx + 4 * s, sy + 8 * s, 8 * s, 4 * s);
+      switch (species) {
+        case 0: {
+          // ── 0. Cat / Fox Critter ──
+          // Ears
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 2 * s, 2 * s, 3 * s);
+          ctx.fillRect(sx + 10 * s, dy + 2 * s, 2 * s, 3 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, dy + 3 * s, 1 * s, 1 * s);
+          ctx.fillRect(sx + 10 * s, dy + 3 * s, 1 * s, 1 * s);
 
-      // ── Accent (belt / stripe) ──
-      ctx.fillStyle = accentColor;
-      ctx.fillRect(sx + 4 * s, sy + 11 * s, 8 * s, 1 * s);
+          // Head / Body outline
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, dy + 4 * s, 10 * s, 9 * s);
 
-      // ── Arms ──
-      ctx.fillStyle = outfitColor;
-      ctx.fillRect(sx + 2 * s, sy + 8 * s, 2 * s, 3 * s);
-      ctx.fillRect(sx + 12 * s, sy + 8 * s, 2 * s, 3 * s);
+          // White inner fill
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, dy + 5 * s, 8 * s, 7 * s);
 
-      // ── Hands ──
-      ctx.fillStyle = skinColor;
-      ctx.fillRect(sx + 2 * s, sy + 11 * s, 2 * s, 1 * s);
-      ctx.fillRect(sx + 12 * s, sy + 11 * s, 2 * s, 1 * s);
+          // Eyes & Cute Nose
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, dy + 7 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 9 * s, dy + 7 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 7 * s, dy + 9 * s, 2 * s, 1 * s);
 
-      // ── Head ──
-      ctx.fillStyle = skinColor;
-      ctx.fillRect(sx + 5 * s, sy + 3 * s, 6 * s, 5 * s);
+          // Whiskers / cheeks
+          ctx.fillRect(sx + 3 * s, dy + 8 * s, 1 * s, 1 * s);
+          ctx.fillRect(sx + 12 * s, dy + 8 * s, 1 * s, 1 * s);
 
-      // ── Eyes ──
-      ctx.fillStyle = "#1a1a2e";
-      ctx.fillRect(sx + 7 * s, sy + 5 * s, 1 * s, 1 * s);
-      ctx.fillRect(sx + 9 * s, sy + 5 * s, 1 * s, 1 * s);
+          // Feet
+          ctx.fillRect(sx + 4 * s, dy + 13 * s, 3 * s, 2 * s);
+          ctx.fillRect(sx + 9 * s, dy + 13 * s, 3 * s, 2 * s);
+          break;
+        }
 
-      // ── Hair (varies by hair_style) ──
-      ctx.fillStyle = hairColor;
-      const hs = char.hair_style % 8;
-      // top of head — always
-      ctx.fillRect(sx + 4 * s, sy + 2 * s, 8 * s, 2 * s);
+        case 1: {
+          // ── 1. Slime / Gumdrop Blob Buddy ──
+          // Dome outline
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 4 * s, 8 * s, 2 * s);
+          ctx.fillRect(sx + 3 * s, dy + 6 * s, 10 * s, 7 * s);
+          ctx.fillRect(sx + 2 * s, dy + 8 * s, 12 * s, 5 * s);
 
-      if (hs === 0) {
-        // short
-        ctx.fillRect(sx + 4 * s, sy + 3 * s, 1 * s, 2 * s);
-      } else if (hs === 1) {
-        // long left
-        ctx.fillRect(sx + 4 * s, sy + 3 * s, 1 * s, 5 * s);
-      } else if (hs === 2) {
-        // long both
-        ctx.fillRect(sx + 4 * s, sy + 3 * s, 1 * s, 5 * s);
-        ctx.fillRect(sx + 11 * s, sy + 3 * s, 1 * s, 5 * s);
-      } else if (hs === 3) {
-        // mohawk
-        ctx.fillRect(sx + 6 * s, sy + 0 * s, 4 * s, 2 * s);
-      } else if (hs === 4) {
-        // ponytail
-        ctx.fillRect(sx + 11 * s, sy + 2 * s, 2 * s, 4 * s);
-      } else if (hs === 5) {
-        // bald — just the top strip already drawn
-      } else if (hs === 6) {
-        // spiky
-        ctx.fillRect(sx + 5 * s, sy + 1 * s, 2 * s, 1 * s);
-        ctx.fillRect(sx + 8 * s, sy + 0 * s, 2 * s, 2 * s);
-        ctx.fillRect(sx + 11 * s, sy + 1 * s, 1 * s, 1 * s);
-      } else {
-        // bowl cut
-        ctx.fillRect(sx + 4 * s, sy + 3 * s, 8 * s, 1 * s);
-      }
+          // White fill
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, dy + 5 * s, 6 * s, 1 * s);
+          ctx.fillRect(sx + 4 * s, dy + 6 * s, 8 * s, 6 * s);
+          ctx.fillRect(sx + 3 * s, dy + 8 * s, 10 * s, 4 * s);
 
-      // ── Accessory ──
-      if (char.accessory === 1) {
-        // hat
-        ctx.fillStyle = accentColor;
-        ctx.fillRect(sx + 3 * s, sy + 1 * s, 10 * s, 2 * s);
-        ctx.fillRect(sx + 5 * s, sy + 0 * s, 6 * s, 1 * s);
-      } else if (char.accessory === 2) {
-        // scarf
-        ctx.fillStyle = accentColor;
-        ctx.fillRect(sx + 4 * s, sy + 7 * s, 8 * s, 2 * s);
-      } else if (char.accessory === 3) {
-        // glasses
-        ctx.fillStyle = "#e0e0e0";
-        ctx.fillRect(sx + 6 * s, sy + 5 * s, 3 * s, 1 * s);
-        ctx.fillRect(sx + 10 * s, sy + 5 * s, 1 * s, 1 * s);
-      } else if (char.accessory === 4) {
-        // bandana
-        ctx.fillStyle = accentColor;
-        ctx.fillRect(sx + 4 * s, sy + 3 * s, 8 * s, 1 * s);
+          // Bead eyes with shiny pixel
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, dy + 7 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 9 * s, dy + 7 * s, 2 * s, 2 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, dy + 7 * s, 1 * s, 1 * s);
+          ctx.fillRect(sx + 9 * s, dy + 7 * s, 1 * s, 1 * s);
+
+          // Smile / glasses
+          ctx.fillStyle = BLK;
+          if (char.accessory === 3) {
+            // glasses frame
+            ctx.fillRect(sx + 4 * s, dy + 6 * s, 4 * s, 1 * s);
+            ctx.fillRect(sx + 8 * s, dy + 6 * s, 4 * s, 1 * s);
+            ctx.fillRect(sx + 7 * s, dy + 7 * s, 2 * s, 1 * s);
+          } else {
+            ctx.fillRect(sx + 7 * s, dy + 10 * s, 2 * s, 1 * s);
+          }
+          break;
+        }
+
+        case 2: {
+          // ── 2. Monitor / TV Robot ──
+          // Antenna
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 7 * s, dy + 1 * s, 2 * s, 3 * s);
+          ctx.fillRect(sx + 6 * s, dy + 0 * s, 4 * s, 1 * s);
+
+          // TV Casing
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, dy + 4 * s, 10 * s, 8 * s);
+
+          // Outer Bezel
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, dy + 5 * s, 8 * s, 6 * s);
+
+          // CRT Screen (Dark)
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, dy + 6 * s, 6 * s, 4 * s);
+
+          // Glowing Pixel Eyes / Face
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 6 * s, dy + 7 * s, 1 * s, 2 * s);
+          ctx.fillRect(sx + 9 * s, dy + 7 * s, 1 * s, 2 * s);
+
+          // Body & Wheels/Treads
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, dy + 12 * s, 6 * s, 2 * s);
+          ctx.fillRect(sx + 4 * s, dy + 13 * s, 8 * s, 2 * s);
+          break;
+        }
+
+        case 3: {
+          // ── 3. Cap Explorer Kid ──
+          // Baseball cap brim sticking forward
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 3 * s, 8 * s, 2 * s);
+          ctx.fillRect(sx + 2 * s, dy + 5 * s, 5 * s, 1 * s); // visor brim
+
+          // Face outline
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 5 * s, 8 * s, 6 * s);
+
+          // Face skin
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, dy + 6 * s, 6 * s, 4 * s);
+
+          // Eyes
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 6 * s, dy + 7 * s, 1 * s, 2 * s);
+          ctx.fillRect(sx + 9 * s, dy + 7 * s, 1 * s, 2 * s);
+
+          // Shirt / Body
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 10 * s, 8 * s, 4 * s);
+          ctx.fillStyle = LGT;
+          ctx.fillRect(sx + 5 * s, dy + 11 * s, 6 * s, 2 * s);
+
+          // Feet
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 14 * s, 2 * s, 1 * s);
+          ctx.fillRect(sx + 10 * s, dy + 14 * s, 2 * s, 1 * s);
+          break;
+        }
+
+        case 4: {
+          // ── 4. Astronaut / Helmet Bot ──
+          // Dome Helmet outline
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, dy + 2 * s, 10 * s, 9 * s);
+
+          // White helmet shell
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, dy + 3 * s, 8 * s, 7 * s);
+
+          // Dark horizontal glossy visor
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 5 * s, 8 * s, 3 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, dy + 5 * s, 2 * s, 1 * s); // visor glare
+
+          // Suit body
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 10 * s, 8 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, dy + 10 * s, 6 * s, 3 * s);
+
+          // Chest panel
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 7 * s, dy + 11 * s, 2 * s, 1 * s);
+
+          // Boots
+          ctx.fillRect(sx + 4 * s, dy + 13 * s, 3 * s, 2 * s);
+          ctx.fillRect(sx + 9 * s, dy + 13 * s, 3 * s, 2 * s);
+          break;
+        }
+
+        case 5: {
+          // ── 5. Bear / Mouse Critter ──
+          // Round Ears
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, dy + 2 * s, 3 * s, 3 * s);
+          ctx.fillRect(sx + 10 * s, dy + 2 * s, 3 * s, 3 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, dy + 3 * s, 1 * s, 1 * s);
+          ctx.fillRect(sx + 11 * s, dy + 3 * s, 1 * s, 1 * s);
+
+          // Head / Body
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, dy + 4 * s, 10 * s, 9 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, dy + 5 * s, 8 * s, 7 * s);
+
+          // Eyes & Snout
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, dy + 7 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 9 * s, dy + 7 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 7 * s, dy + 8 * s, 2 * s, 2 * s);
+
+          // Feet
+          ctx.fillRect(sx + 4 * s, dy + 13 * s, 3 * s, 2 * s);
+          ctx.fillRect(sx + 9 * s, dy + 13 * s, 3 * s, 2 * s);
+          break;
+        }
+
+        case 6: {
+          // ── 6. Chick / Duckling ──
+          // Round Body outline
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, dy + 3 * s, 8 * s, 9 * s);
+          ctx.fillRect(sx + 11 * s, dy + 6 * s, 3 * s, 2 * s); // beak outline
+
+          // White fill
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, dy + 4 * s, 6 * s, 7 * s);
+
+          // Beak fill
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 11 * s, dy + 6 * s, 2 * s, 2 * s);
+
+          // Eye
+          ctx.fillRect(sx + 8 * s, dy + 5 * s, 2 * s, 2 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 8 * s, dy + 5 * s, 1 * s, 1 * s);
+
+          // Little feet
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, dy + 12 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 8 * s, dy + 12 * s, 2 * s, 2 * s);
+          break;
+        }
+
+        default: {
+          // ── 7. Alien / Cyber Buddy ──
+          // Inverted Teardrop Head outline
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 6 * s, dy + 1 * s, 4 * s, 2 * s); // antenna
+          ctx.fillRect(sx + 7 * s, dy + 0 * s, 2 * s, 1 * s);
+          ctx.fillRect(sx + 3 * s, dy + 3 * s, 10 * s, 9 * s);
+
+          // White fill
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, dy + 4 * s, 8 * s, 7 * s);
+
+          // Big slanted alien eyes
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, dy + 6 * s, 2 * s, 3 * s);
+          ctx.fillRect(sx + 9 * s, dy + 6 * s, 2 * s, 3 * s);
+
+          // Body
+          ctx.fillRect(sx + 5 * s, dy + 11 * s, 6 * s, 3 * s);
+          ctx.fillRect(sx + 5 * s, dy + 14 * s, 2 * s, 1 * s);
+          ctx.fillRect(sx + 9 * s, dy + 14 * s, 2 * s, 1 * s);
+          break;
+        }
       }
 
       ctx.restore();
     },
 
-    /** Draw a character portrait (for the "Your Character" panel) on a 64×64 canvas */
+    /** Draw character portrait on a 64x64 canvas for HUD */
     drawPortrait(canvas, char) {
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, 64, 64);
       ctx.imageSmoothingEnabled = false;
 
-      // draw character centered, scaled up 3x
+      // Draw light background matching game aesthetic
+      ctx.fillStyle = "#e4e7eb";
+      ctx.fillRect(0, 0, 64, 64);
+
+      // Draw character centered at scale 3
       this.drawCharacter(ctx, char, 8, 8, 3, 0, true);
     },
 
-    /** Draw a building at screen position */
+    /** Draw retro sci-fi outpost structures and vehicles matching reference image */
     drawBuilding(ctx, type, sx, sy, scale) {
       const s = scale;
+      const BLK = GB.BLACK;
+      const WHT = GB.WHITE;
+      const GRY = GB.DARK;
+      const LGT = GB.LIGHT;
+
       ctx.save();
 
       switch (type) {
-        case "campfire":
-          // logs
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 2 * s, sy + 10 * s, 12 * s, 2 * s);
-          ctx.fillRect(sx + 4 * s, sy + 8 * s, 8 * s, 2 * s);
-          // flames (animated via frame)
-          const flicker = Math.random() > 0.5;
-          ctx.fillStyle = "#e74c3c";
-          ctx.fillRect(sx + 5 * s, sy + (flicker ? 4 : 5) * s, 6 * s, 4 * s);
-          ctx.fillStyle = "#f39c12";
-          ctx.fillRect(sx + 6 * s, sy + (flicker ? 3 : 4) * s, 4 * s, 3 * s);
-          ctx.fillStyle = "#f1c40f";
-          ctx.fillRect(sx + 7 * s, sy + (flicker ? 2 : 3) * s, 2 * s, 2 * s);
-          break;
+        case "campfire": {
+          // ── Signal Beacon / Portable Terminal ──
+          // Solid Drop Shadow
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, sy + 14 * s, 12 * s, 3 * s);
 
-        case "tent":
-          ctx.fillStyle = "#8b7355";
-          // triangle-ish shape
-          ctx.fillRect(sx + 4 * s, sy + 4 * s, 8 * s, 8 * s);
-          ctx.fillStyle = "#a0896b";
-          ctx.fillRect(sx + 5 * s, sy + 2 * s, 6 * s, 2 * s);
-          ctx.fillRect(sx + 6 * s, sy + 0 * s, 4 * s, 2 * s);
-          // opening
-          ctx.fillStyle = "#2c1810";
-          ctx.fillRect(sx + 6 * s, sy + 8 * s, 4 * s, 4 * s);
-          break;
+          // Terminal Box
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, sy + 6 * s, 10 * s, 8 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, sy + 7 * s, 8 * s, 6 * s);
 
-        case "hut":
-          // walls
-          ctx.fillStyle = "#8b7355";
-          ctx.fillRect(sx + 2 * s, sy + 6 * s, 12 * s, 8 * s);
-          // roof
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 1 * s, sy + 4 * s, 14 * s, 3 * s);
-          ctx.fillRect(sx + 3 * s, sy + 2 * s, 10 * s, 2 * s);
-          // door
-          ctx.fillStyle = "#2c1810";
-          ctx.fillRect(sx + 6 * s, sy + 10 * s, 4 * s, 4 * s);
-          // window
-          ctx.fillStyle = "#f1c40f";
-          ctx.fillRect(sx + 11 * s, sy + 8 * s, 2 * s, 2 * s);
-          break;
+          // CRT Screen with blinking wave
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, sy + 8 * s, 6 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          const f = (Date.now() / 200) | 0;
+          ctx.fillRect(sx + (5 + (f % 4)) * s, sy + 9 * s, 2 * s, 1 * s);
 
-        case "well":
-          ctx.fillStyle = "#708090";
-          ctx.fillRect(sx + 4 * s, sy + 8 * s, 8 * s, 4 * s);
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 3 * s, sy + 4 * s, 1 * s, 4 * s);
-          ctx.fillRect(sx + 12 * s, sy + 4 * s, 1 * s, 4 * s);
-          ctx.fillRect(sx + 3 * s, sy + 3 * s, 10 * s, 1 * s);
-          ctx.fillStyle = "#4a90d9";
-          ctx.fillRect(sx + 5 * s, sy + 9 * s, 6 * s, 2 * s);
-          break;
+          // Antenna Mast
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 7 * s, sy + 0 * s, 2 * s, 6 * s);
+          ctx.fillRect(sx + 6 * s, sy + 0 * s, 4 * s, 1 * s);
 
-        case "house":
-          // stone walls
-          ctx.fillStyle = "#a0896b";
-          ctx.fillRect(sx + 1 * s, sy + 6 * s, 14 * s, 10 * s);
-          // roof
-          ctx.fillStyle = "#c0392b";
-          ctx.fillRect(sx + 0 * s, sy + 4 * s, 16 * s, 3 * s);
-          ctx.fillRect(sx + 2 * s, sy + 2 * s, 12 * s, 2 * s);
-          // door
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 6 * s, sy + 11 * s, 4 * s, 5 * s);
-          // windows
-          ctx.fillStyle = "#f1c40f";
-          ctx.fillRect(sx + 3 * s, sy + 8 * s, 2 * s, 2 * s);
-          ctx.fillRect(sx + 11 * s, sy + 8 * s, 2 * s, 2 * s);
+          // Radio Pulse Waves
+          ctx.fillRect(sx + 4 * s, sy - 2 * s, 2 * s, 1 * s);
+          ctx.fillRect(sx + 10 * s, sy - 2 * s, 2 * s, 1 * s);
           break;
+        }
 
-        case "farm":
-          // soil
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 0 * s, sy + 10 * s, 16 * s, 6 * s);
-          // crop rows
-          ctx.fillStyle = "#27ae60";
-          for (let i = 0; i < 4; i++) {
-            ctx.fillRect(sx + (1 + i * 4) * s, sy + 8 * s, 2 * s, 2 * s);
-            ctx.fillRect(sx + (1 + i * 4) * s, sy + 6 * s, 1 * s, 2 * s);
-          }
-          break;
+        case "tent": {
+          // ── Survey Rover / Buggy ──
+          // Solid Drop Shadow
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 14 * s, 14 * s, 3 * s);
 
-        case "market":
-          // stall base
-          ctx.fillStyle = "#8b7355";
-          ctx.fillRect(sx + 1 * s, sy + 8 * s, 14 * s, 6 * s);
-          // awning
-          ctx.fillStyle = "#e74c3c";
-          ctx.fillRect(sx + 0 * s, sy + 5 * s, 16 * s, 3 * s);
-          // stripes
-          ctx.fillStyle = "#f1f3f5";
-          ctx.fillRect(sx + 0 * s, sy + 6 * s, 16 * s, 1 * s);
-          // goods
-          ctx.fillStyle = "#f39c12";
-          ctx.fillRect(sx + 3 * s, sy + 9 * s, 2 * s, 2 * s);
-          ctx.fillStyle = "#27ae60";
-          ctx.fillRect(sx + 7 * s, sy + 9 * s, 2 * s, 2 * s);
-          ctx.fillStyle = "#3498db";
-          ctx.fillRect(sx + 11 * s, sy + 9 * s, 2 * s, 2 * s);
-          break;
+          // Rover Body Chassis
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 1 * s, sy + 6 * s, 14 * s, 8 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 2 * s, sy + 7 * s, 12 * s, 6 * s);
 
-        case "watchtower":
-          ctx.fillStyle = "#708090";
-          ctx.fillRect(sx + 5 * s, sy + 2 * s, 6 * s, 14 * s);
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 3 * s, sy + 0 * s, 10 * s, 3 * s);
-          ctx.fillStyle = "#2c1810";
-          ctx.fillRect(sx + 7 * s, sy + 12 * s, 2 * s, 4 * s);
-          // flag
-          ctx.fillStyle = "#e74c3c";
-          ctx.fillRect(sx + 10 * s, sy + 0 * s, 4 * s, 2 * s);
-          break;
+          // Roll Cage / Windshield
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, sy + 2 * s, 8 * s, 5 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, sy + 3 * s, 6 * s, 3 * s);
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 6 * s, sy + 4 * s, 4 * s, 2 * s); // windshield glass
 
-        case "townhall":
-          ctx.fillStyle = "#a0896b";
-          ctx.fillRect(sx + 0 * s, sy + 6 * s, 16 * s, 10 * s);
-          ctx.fillStyle = "#708090";
-          ctx.fillRect(sx + 0 * s, sy + 4 * s, 16 * s, 3 * s);
-          ctx.fillRect(sx + 2 * s, sy + 2 * s, 12 * s, 2 * s);
-          ctx.fillRect(sx + 4 * s, sy + 0 * s, 8 * s, 2 * s);
-          // columns
-          ctx.fillStyle = "#f1f3f5";
-          ctx.fillRect(sx + 2 * s, sy + 7 * s, 2 * s, 8 * s);
-          ctx.fillRect(sx + 12 * s, sy + 7 * s, 2 * s, 8 * s);
-          // door
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 6 * s, sy + 11 * s, 4 * s, 5 * s);
+          // Big Knobby Tires
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 1 * s, sy + 11 * s, 3 * s, 4 * s);
+          ctx.fillRect(sx + 12 * s, sy + 11 * s, 3 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 2 * s, sy + 12 * s, 1 * s, 2 * s);
+          ctx.fillRect(sx + 13 * s, sy + 12 * s, 1 * s, 2 * s);
           break;
+        }
 
-        case "castle":
-          // main body
-          ctx.fillStyle = "#708090";
-          ctx.fillRect(sx + 2 * s, sy + 4 * s, 12 * s, 12 * s);
-          // towers
-          ctx.fillRect(sx + 0 * s, sy + 2 * s, 4 * s, 14 * s);
-          ctx.fillRect(sx + 12 * s, sy + 2 * s, 4 * s, 14 * s);
-          // battlements
-          ctx.fillStyle = "#5a6a7a";
-          ctx.fillRect(sx + 0 * s, sy + 0 * s, 2 * s, 2 * s);
-          ctx.fillRect(sx + 3 * s, sy + 0 * s, 2 * s, 2 * s);
-          ctx.fillRect(sx + 12 * s, sy + 0 * s, 2 * s, 2 * s);
-          ctx.fillRect(sx + 15 * s, sy + 0 * s, 2 * s, 2 * s);
-          // gate
-          ctx.fillStyle = "#2c1810";
-          ctx.fillRect(sx + 6 * s, sy + 10 * s, 4 * s, 6 * s);
-          // windows
-          ctx.fillStyle = "#f1c40f";
-          ctx.fillRect(sx + 1 * s, sy + 6 * s, 2 * s, 2 * s);
-          ctx.fillRect(sx + 13 * s, sy + 6 * s, 2 * s, 2 * s);
-          break;
+        case "hut": {
+          // ── Modular Hab Unit ──
+          // Drop shadow
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 15 * s, 16 * s, 3 * s);
 
-        case "cathedral":
-          ctx.fillStyle = "#a0896b";
-          ctx.fillRect(sx + 2 * s, sy + 6 * s, 12 * s, 10 * s);
-          ctx.fillStyle = "#708090";
-          ctx.fillRect(sx + 4 * s, sy + 2 * s, 8 * s, 4 * s);
-          ctx.fillRect(sx + 6 * s, sy + 0 * s, 4 * s, 2 * s);
-          // cross
-          ctx.fillStyle = "#f1c40f";
-          ctx.fillRect(sx + 7 * s, sy - 2 * s, 2 * s, 3 * s);
-          ctx.fillRect(sx + 6 * s, sy - 1 * s, 4 * s, 1 * s);
-          // stained glass
-          ctx.fillStyle = "#9b59b6";
-          ctx.fillRect(sx + 6 * s, sy + 7 * s, 4 * s, 3 * s);
-          // door
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 6 * s, sy + 12 * s, 4 * s, 4 * s);
+          // Sloped roof module
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 1 * s, sy + 3 * s, 14 * s, 12 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 2 * s, sy + 4 * s, 12 * s, 10 * s);
+
+          // Sloped panel hatch lines
+          drawHatch(ctx, sx + 2 * s, sy + 4 * s, 12 * s, 4 * s, s, BLK);
+
+          // Airlock door with step
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 6 * s, sy + 9 * s, 4 * s, 5 * s);
+          ctx.fillRect(sx + 5 * s, sy + 13 * s, 6 * s, 1 * s); // step
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 8 * s, sy + 11 * s, 1 * s, 1 * s); // door handle
           break;
+        }
+
+        case "well": {
+          // ── Cryo Core / Fuel Depot ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 13 * s, 14 * s, 3 * s);
+
+          // Dual Cylinder Tanks
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 4 * s, 5 * s, 10 * s);
+          ctx.fillRect(sx + 9 * s, sy + 4 * s, 5 * s, 10 * s);
+
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 3 * s, sy + 5 * s, 3 * s, 8 * s);
+          ctx.fillRect(sx + 10 * s, sy + 5 * s, 3 * s, 8 * s);
+
+          // Pressure Level Meters
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, sy + 7 * s, 1 * s, 4 * s);
+          ctx.fillRect(sx + 11 * s, sy + 7 * s, 1 * s, 4 * s);
+
+          // Connecting Pipes & Valve
+          ctx.fillRect(sx + 7 * s, sy + 6 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 6 * s, sy + 9 * s, 4 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 7 * s, sy + 10 * s, 2 * s, 2 * s);
+          break;
+        }
+
+        case "house": {
+          // ── Colonist Outpost Pod ──
+          // Drop shadow
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 1 * s, sy + 15 * s, 18 * s, 3 * s);
+
+          // Main Building Shell
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 0 * s, sy + 4 * s, 17 * s, 12 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 1 * s, sy + 5 * s, 15 * s, 10 * s);
+
+          // Roof Solar Panel with grid
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 2 * s, 13 * s, 3 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 3 * s, sy + 3 * s, 11 * s, 1 * s);
+
+          // Observation Windows with frames
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, sy + 7 * s, 4 * s, 3 * s);
+          ctx.fillRect(sx + 10 * s, sy + 7 * s, 4 * s, 3 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, sy + 8 * s, 2 * s, 1 * s);
+          ctx.fillRect(sx + 11 * s, sy + 8 * s, 2 * s, 1 * s);
+
+          // Airlock Doorway
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 6 * s, sy + 11 * s, 5 * s, 4 * s);
+          break;
+        }
+
+        case "farm": {
+          // ── Hydroponic Greenhouse Dome ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 1 * s, sy + 14 * s, 16 * s, 3 * s);
+
+          // Glass Dome Arch
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, sy + 3 * s, 12 * s, 12 * s);
+          ctx.fillRect(sx + 1 * s, sy + 6 * s, 16 * s, 9 * s);
+
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, sy + 4 * s, 10 * s, 10 * s);
+          ctx.fillRect(sx + 2 * s, sy + 7 * s, 14 * s, 7 * s);
+
+          // Internal Greenery Trays with Hatching
+          drawHatch(ctx, sx + 3 * s, sy + 9 * s, 12 * s, 4 * s, s, BLK);
+
+          // Dome Geodesic Grid lines
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 8 * s, sy + 3 * s, 2 * s, 11 * s);
+          ctx.fillRect(sx + 2 * s, sy + 8 * s, 14 * s, 1 * s);
+          break;
+        }
+
+        case "market": {
+          // ── Heavy Pickup Rover (From User's Image!) ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 1 * s, sy + 15 * s, 18 * s, 3 * s);
+
+          // Chassis & Cab
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 1 * s, sy + 6 * s, 17 * s, 8 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 2 * s, sy + 7 * s, 15 * s, 6 * s);
+
+          // Cab roof & rollbar
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 7 * s, sy + 2 * s, 9 * s, 5 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 8 * s, sy + 3 * s, 7 * s, 3 * s);
+
+          // Windshield
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 8 * s, sy + 4 * s, 4 * s, 2 * s);
+
+          // Cargo in rear bed
+          ctx.fillRect(sx + 2 * s, sy + 4 * s, 4 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 3 * s, sy + 5 * s, 2 * s, 2 * s);
+
+          // Chunky knobby off-road wheels
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 12 * s, 4 * s, 4 * s);
+          ctx.fillRect(sx + 12 * s, sy + 12 * s, 4 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 3 * s, sy + 13 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 13 * s, sy + 13 * s, 2 * s, 2 * s);
+          break;
+        }
+
+        case "watchtower": {
+          // ── Radar Station & Sensor Array ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, sy + 15 * s, 12 * s, 2 * s);
+
+          // Lattice Scaffolding Tower with Cross-bracing
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 6 * s, sy + 6 * s, 6 * s, 10 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 7 * s, sy + 7 * s, 4 * s, 8 * s);
+          drawHatch(ctx, sx + 7 * s, sy + 7 * s, 4 * s, 8 * s, s, BLK);
+
+          // Upper Observation Deck
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, sy + 4 * s, 10 * s, 3 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, sy + 5 * s, 8 * s, 1 * s);
+
+          // Radar Dish on top
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, sy + 0 * s, 10 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 6 * s, sy + 1 * s, 6 * s, 2 * s);
+
+          // Flashing Beacon
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 8 * s, sy - 2 * s, 2 * s, 2 * s);
+          break;
+        }
+
+        case "townhall": {
+          // ── Central Command Outpost (The Big Triangular Base From Image!) ──
+          // Heavy solid black drop shadow
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 0 * s, sy + 17 * s, 24 * s, 4 * s);
+
+          // Triangular angular hull
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 0 * s, sy + 4 * s, 22 * s, 14 * s);
+          ctx.fillRect(sx + 4 * s, sy + 1 * s, 14 * s, 4 * s);
+
+          // White hull plates
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 1 * s, sy + 5 * s, 20 * s, 12 * s);
+          ctx.fillRect(sx + 5 * s, sy + 2 * s, 12 * s, 3 * s);
+
+          // Upper Louver Vents
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 8 * s, sy + 3 * s, 6 * s, 1 * s);
+          ctx.fillRect(sx + 8 * s, sy + 5 * s, 6 * s, 1 * s);
+
+          // Wing Panels with Diagonal Hatching (matching photo)
+          drawHatch(ctx, sx + 2 * s, sy + 6 * s, 5 * s, 5 * s, s, BLK);
+          drawHatch(ctx, sx + 15 * s, sy + 6 * s, 5 * s, 5 * s, s, BLK);
+
+          // "TL-00" Stencil Text
+          ctx.fillStyle = BLK;
+          ctx.font = `bold ${5 * s}px monospace`;
+          ctx.fillText("TL", sx + 15 * s, sy + 14 * s);
+
+          // Central Recessed Airlock with Open Doorway
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 8 * s, sy + 9 * s, 6 * s, 8 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 9 * s, sy + 10 * s, 4 * s, 6 * s);
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 9 * s, sy + 11 * s, 4 * s, 5 * s); // black entrance
+
+          // Ladder entry steps
+          ctx.fillRect(sx + 8 * s, sy + 16 * s, 6 * s, 2 * s);
+          break;
+        }
+
+        case "castle": {
+          // ── Mobile Crawler Base (The Crawler Vehicle From Image!) ──
+          // Shadow
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 0 * s, sy + 16 * s, 24 * s, 3 * s);
+
+          // Front Cab Module
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 1 * s, sy + 4 * s, 9 * s, 9 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 2 * s, sy + 5 * s, 7 * s, 7 * s);
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, sy + 6 * s, 4 * s, 3 * s); // cab window
+
+          // Hitch connector
+          ctx.fillRect(sx + 10 * s, sy + 9 * s, 3 * s, 2 * s);
+
+          // Trailer with Computer Monitors & Server Racks
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 13 * s, sy + 4 * s, 10 * s, 9 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 14 * s, sy + 5 * s, 8 * s, 7 * s);
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 15 * s, sy + 6 * s, 3 * s, 3 * s); // monitor 1
+          ctx.fillRect(sx + 19 * s, sy + 6 * s, 2 * s, 5 * s); // server rack
+
+          // Caterpillar Treads underneath
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 0 * s, sy + 12 * s, 10 * s, 4 * s);
+          ctx.fillRect(sx + 13 * s, sy + 12 * s, 10 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          // Road wheels inside tracks
+          ctx.fillRect(sx + 2 * s, sy + 13 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 6 * s, sy + 13 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 15 * s, sy + 13 * s, 2 * s, 2 * s);
+          ctx.fillRect(sx + 19 * s, sy + 13 * s, 2 * s, 2 * s);
+          break;
+        }
+
+        case "cathedral": {
+          // ── Orbital Uplink Relay Spire ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 17 * s, 16 * s, 3 * s);
+
+          // Monolithic Spire Hull
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, sy + 0 * s, 10 * s, 18 * s);
+          ctx.fillRect(sx + 2 * s, sy + 8 * s, 16 * s, 10 * s);
+
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 6 * s, sy + 1 * s, 8 * s, 16 * s);
+          ctx.fillRect(sx + 3 * s, sy + 9 * s, 14 * s, 8 * s);
+
+          // Diagonal Cooling Fins
+          drawHatch(ctx, sx + 3 * s, sy + 9 * s, 4 * s, 7 * s, s, BLK);
+          drawHatch(ctx, sx + 13 * s, sy + 9 * s, 4 * s, 7 * s, s, BLK);
+
+          // Central Glowing Energy Conduit
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 8 * s, sy + 2 * s, 4 * s, 12 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 9 * s, sy + 3 * s, 2 * s, 10 * s);
+          break;
+        }
       }
 
       ctx.restore();
     },
 
-    /** Draw a decoration (tree, rock, flower, etc.) */
+    /** Draw decorations matching the reference image */
     drawDecoration(ctx, type, sx, sy, scale) {
       const s = scale;
+      const BLK = GB.BLACK;
+      const WHT = GB.WHITE;
 
       switch (type) {
-        case "tree":
-          // trunk
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 6 * s, sy + 8 * s, 4 * s, 6 * s);
-          // foliage
-          ctx.fillStyle = "#27ae60";
-          ctx.fillRect(sx + 3 * s, sy + 2 * s, 10 * s, 7 * s);
-          ctx.fillRect(sx + 5 * s, sy + 0 * s, 6 * s, 2 * s);
-          break;
+        case "tree": {
+          // ── Mainframe Computer Stack (From User's Image!) ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 14 * s, 12 * s, 2 * s); // shadow
 
-        case "rock":
-          ctx.fillStyle = "#708090";
-          ctx.fillRect(sx + 3 * s, sy + 8 * s, 10 * s, 6 * s);
-          ctx.fillStyle = "#5a6a7a";
-          ctx.fillRect(sx + 5 * s, sy + 6 * s, 6 * s, 2 * s);
-          break;
+          // Computer Tower
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 2 * s, sy + 3 * s, 11 * s, 12 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 3 * s, sy + 4 * s, 9 * s, 10 * s);
 
-        case "flower":
-          // stem
-          ctx.fillStyle = "#27ae60";
-          ctx.fillRect(sx + 7 * s, sy + 8 * s, 2 * s, 6 * s);
-          // petals
-          ctx.fillStyle = "#e74c3c";
-          ctx.fillRect(sx + 6 * s, sy + 6 * s, 4 * s, 3 * s);
-          ctx.fillStyle = "#f1c40f";
-          ctx.fillRect(sx + 7 * s, sy + 7 * s, 2 * s, 1 * s);
-          break;
+          // CRT Monitor screen
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, sy + 5 * s, 7 * s, 4 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 5 * s, sy + 6 * s, 5 * s, 1 * s);
+          ctx.fillRect(sx + 5 * s, sy + 8 * s, 3 * s, 1 * s);
 
-        case "fence":
-          ctx.fillStyle = "#8b7355";
-          ctx.fillRect(sx + 0 * s, sy + 8 * s, 16 * s, 1 * s);
-          ctx.fillRect(sx + 0 * s, sy + 11 * s, 16 * s, 1 * s);
-          ctx.fillRect(sx + 1 * s, sy + 6 * s, 2 * s, 7 * s);
-          ctx.fillRect(sx + 7 * s, sy + 6 * s, 2 * s, 7 * s);
-          ctx.fillRect(sx + 13 * s, sy + 6 * s, 2 * s, 7 * s);
-          break;
+          // Floppy/Disk slots & keyboard
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 4 * s, sy + 10 * s, 7 * s, 1 * s);
+          ctx.fillRect(sx + 4 * s, sy + 12 * s, 7 * s, 1 * s);
 
-        case "signpost":
-          ctx.fillStyle = "#5c3a21";
-          ctx.fillRect(sx + 7 * s, sy + 4 * s, 2 * s, 10 * s);
-          ctx.fillStyle = "#8b7355";
-          ctx.fillRect(sx + 3 * s, sy + 4 * s, 10 * s, 3 * s);
+          // Floor Cable
+          ctx.fillRect(sx + 13 * s, sy + 13 * s, 3 * s, 1 * s);
           break;
+        }
 
-        case "bridge":
-          ctx.fillStyle = "#8b7355";
+        case "rock": {
+          // ── Space Boulder with 45-degree Hatching ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, sy + 12 * s, 11 * s, 2 * s);
+
+          // Rock facets
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 3 * s, sy + 6 * s, 10 * s, 7 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 4 * s, sy + 7 * s, 8 * s, 5 * s);
+
+          // Shaded side with 45-degree hatching
+          drawHatch(ctx, sx + 7 * s, sy + 7 * s, 5 * s, 5 * s, s, BLK);
+          break;
+        }
+
+        case "flower": {
+          // ── Antenna Sensor Probe ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, sy + 13 * s, 6 * s, 1 * s);
+
+          // Tripod Legs & Mast
+          ctx.fillRect(sx + 7 * s, sy + 2 * s, 2 * s, 11 * s);
+          ctx.fillRect(sx + 5 * s, sy + 10 * s, 2 * s, 3 * s);
+          ctx.fillRect(sx + 9 * s, sy + 10 * s, 2 * s, 3 * s);
+
+          // Top Sensor Node with flashing light
+          ctx.fillRect(sx + 6 * s, sy + 1 * s, 4 * s, 2 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 7 * s, sy + 1 * s, 2 * s, 1 * s);
+          break;
+        }
+
+        case "fence": {
+          // ── Hazard Railing ──
+          ctx.fillStyle = BLK;
           ctx.fillRect(sx + 0 * s, sy + 8 * s, 16 * s, 2 * s);
           ctx.fillRect(sx + 0 * s, sy + 12 * s, 16 * s, 2 * s);
-          // railings
-          ctx.fillRect(sx + 0 * s, sy + 6 * s, 2 * s, 8 * s);
-          ctx.fillRect(sx + 14 * s, sy + 6 * s, 2 * s, 8 * s);
-          // water underneath
-          ctx.fillStyle = "rgba(74, 144, 217, 0.6)";
-          ctx.fillRect(sx + 2 * s, sy + 10 * s, 12 * s, 2 * s);
+          ctx.fillRect(sx + 1 * s, sy + 7 * s, 2 * s, 7 * s);
+          ctx.fillRect(sx + 7 * s, sy + 7 * s, 2 * s, 7 * s);
+          ctx.fillRect(sx + 13 * s, sy + 7 * s, 2 * s, 7 * s);
           break;
+        }
+
+        case "signpost": {
+          // ── Holographic Nav Console ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 5 * s, sy + 8 * s, 6 * s, 6 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 6 * s, sy + 9 * s, 4 * s, 4 * s);
+
+          // Floating arrow beacon
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 6 * s, sy + 3 * s, 4 * s, 2 * s);
+          ctx.fillRect(sx + 7 * s, sy + 1 * s, 2 * s, 4 * s);
+          break;
+        }
+
+        case "bridge": {
+          // ── Gridded Metal Catwalk ──
+          ctx.fillStyle = BLK;
+          ctx.fillRect(sx + 0 * s, sy + 7 * s, 16 * s, 7 * s);
+          ctx.fillStyle = WHT;
+          ctx.fillRect(sx + 1 * s, sy + 8 * s, 14 * s, 5 * s);
+          drawHatch(ctx, sx + 1 * s, sy + 8 * s, 14 * s, 5 * s, s, BLK);
+          break;
+        }
       }
     },
 
-    /** Draw an isometric ground tile */
+    /** Draw top-down ground tiles with retro paper tone and diagonal hatched patches */
     drawTile(ctx, type, sx, sy, tileW, tileH) {
-      const colors = {
-        grass: "#2d5a1e",
-        grass_light: "#3a7a28",
-        dirt: "#6b4423",
-        stone: "#708090",
-        water: "#2980b9",
-        farmland: "#5c3a21",
-      };
+      const s = 1;
+      const BG = "#e5e8eb"; // light retro paper background
+      const BLK = GB.BLACK;
 
-      ctx.fillStyle = colors[type] || colors.grass;
-      // draw isometric diamond
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(sx + tileW / 2, sy + tileH / 2);
-      ctx.lineTo(sx, sy + tileH);
-      ctx.lineTo(sx - tileW / 2, sy + tileH / 2);
-      ctx.closePath();
-      ctx.fill();
+      // Base tile fill
+      ctx.fillStyle = BG;
+      ctx.fillRect(sx, sy, tileW, tileH);
 
-      // subtle outline
-      ctx.strokeStyle = "rgba(255,255,255,0.05)";
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
+      // Subtle boundary grid dots
+      ctx.fillStyle = "rgba(12, 12, 15, 0.15)";
+      ctx.fillRect(sx, sy, 1, 1);
+      ctx.fillRect(sx + tileW - 1, sy, 1, 1);
+
+      // Distinctive 45-degree diagonal hatching patches (from user's image!)
+      if (type === "dirt" || type === "grass_light") {
+        drawHatch(ctx, sx + 4, sy + 4, tileW - 8, tileH - 8, s, "rgba(12, 12, 15, 0.7)");
+      } else if (type === "stone") {
+        // Tech walkway panel with borders and rivets
+        ctx.strokeStyle = "rgba(12, 12, 15, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sx + 2, sy + 2, tileW - 4, tileH - 4);
+        ctx.fillStyle = BLK;
+        ctx.fillRect(sx + 4, sy + 4, 2, 2);
+        ctx.fillRect(sx + tileW - 6, sy + 4, 2, 2);
+        ctx.fillRect(sx + 4, sy + tileH - 6, 2, 2);
+        ctx.fillRect(sx + tileW - 6, sy + tileH - 6, 2, 2);
+      }
     },
   };
 
   /* ─────────────────────────────────────────────────────
-     MODULE 5 — ISOMETRIC ENGINE
+     MODULE 5 — 2D TOP-DOWN ENGINE (Orthographic)
   ───────────────────────────────────────────────────── */
-  const TILE_W = 32;
-  const TILE_H = 16;
+  const TILE_W = 36;
+  const TILE_H = 36;
 
   const Iso = {
-    /** Convert grid coordinates to screen position */
+    /** Convert grid coordinates to screen position (top-down 2D) */
     gridToScreen(gx, gy, camera) {
-      const sx = (gx - gy) * (TILE_W / 2) - camera.x + camera.canvasW / 2;
-      const sy = (gx + gy) * (TILE_H / 2) - camera.y + camera.canvasH / 2;
+      const sx = gx * TILE_W - camera.x + camera.canvasW / 2;
+      const sy = gy * TILE_H - camera.y + camera.canvasH / 2;
       return { x: sx, y: sy };
     },
 
-    /** Convert screen position to grid coordinates */
+    /** Convert screen position to grid coordinates (top-down 2D) */
     screenToGrid(sx, sy, camera) {
       const worldX = sx - camera.canvasW / 2 + camera.x;
       const worldY = sy - camera.canvasH / 2 + camera.y;
-      const gx = (worldX / (TILE_W / 2) + worldY / (TILE_H / 2)) / 2;
-      const gy = (worldY / (TILE_H / 2) - worldX / (TILE_W / 2)) / 2;
-      return { x: Math.round(gx), y: Math.round(gy) };
+      return {
+        x: Math.round(worldX / TILE_W),
+        y: Math.round(worldY / TILE_H),
+      };
     },
 
     /** Create a camera object */
@@ -673,9 +1087,9 @@ const CivEngine = (() => {
       camera.y += (camera.targetY - camera.y) * 0.05;
     },
 
-    /** Sort entities by depth for correct isometric overlap */
+    /** Sort entities by Y depth for correct top-down overlap */
     depthSort(entities) {
-      return entities.sort((a, b) => (a.gy + a.gx) - (b.gy + b.gx));
+      return entities.sort((a, b) => a.gy - b.gy);
     },
   };
 
@@ -968,27 +1382,27 @@ const CivEngine = (() => {
 
       if (hour >= 6 && hour < 8) {
         phase = "dawn";
-        overlay = "rgba(255, 160, 50, 0.12)";
+        overlay = "rgba(255, 255, 255, 0.04)";
         emoji = "🌅";
         label = "Dawn";
       } else if (hour >= 8 && hour < 17) {
         phase = "day";
-        overlay = "rgba(0, 0, 0, 0)";
+        overlay = "rgba(255, 255, 255, 0.02)";
         emoji = "☀️";
         label = "Day";
       } else if (hour >= 17 && hour < 19) {
         phase = "dusk";
-        overlay = "rgba(255, 100, 50, 0.15)";
+        overlay = "rgba(0, 0, 0, 0.08)";
         emoji = "🌇";
         label = "Dusk";
       } else if (hour >= 19 && hour < 22) {
         phase = "evening";
-        overlay = "rgba(30, 30, 80, 0.25)";
+        overlay = "rgba(0, 0, 0, 0.15)";
         emoji = "🌙";
         label = "Evening";
       } else {
         phase = "night";
-        overlay = "rgba(10, 10, 50, 0.4)";
+        overlay = "rgba(0, 0, 0, 0.25)";
         emoji = "🌙";
         label = "Night";
       }
@@ -1005,16 +1419,15 @@ const CivEngine = (() => {
       ctx.fillStyle = overlayColor;
       ctx.fillRect(0, 0, width, height);
 
-      // stars at night
+      // stars at night (white dots)
       if (info.phase === "night" || info.phase === "evening") {
         const starCount = info.phase === "night" ? 40 : 15;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-        // deterministic star positions
+        ctx.fillStyle = "#ffffff";
         for (let i = 0; i < starCount; i++) {
           const sx = ((i * 7919 + 1) % width);
           const sy = ((i * 6271 + 3) % (height * 0.4));
           const twinkle = Math.sin(Date.now() * 0.002 + i) * 0.5 + 0.5;
-          ctx.globalAlpha = twinkle * 0.8;
+          ctx.globalAlpha = twinkle * 0.6;
           ctx.fillRect(sx, sy, 1.5, 1.5);
         }
         ctx.globalAlpha = 1;
@@ -1023,11 +1436,11 @@ const CivEngine = (() => {
       return info;
     },
 
-    /** Draw glow effects for light sources (campfire, windows) at night */
+    /** Draw glow effects for light sources (white glow — monochrome) */
     drawGlow(ctx, sx, sy, radius, intensity) {
       const gradient = ctx.createRadialGradient(sx, sy, 0, sx, sy, radius);
-      gradient.addColorStop(0, `rgba(255, 200, 80, ${0.3 * intensity})`);
-      gradient.addColorStop(1, "rgba(255, 200, 80, 0)");
+      gradient.addColorStop(0, `rgba(255, 255, 255, ${0.15 * intensity})`);
+      gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
       ctx.fillStyle = gradient;
       ctx.fillRect(sx - radius, sy - radius, radius * 2, radius * 2);
     },
@@ -1220,14 +1633,17 @@ const CivEngine = (() => {
 
       ctx.clearRect(0, 0, w, h);
 
-      // ── Background ──
-      ctx.fillStyle = "#1a2a1a";
+      // ── Background (Light Retro Paper Tone from Reference Image) ──
+      ctx.fillStyle = "#e4e7eb";
       ctx.fillRect(0, 0, w, h);
 
       // ── Ground tiles ──
       world.tiles.forEach((tile) => {
         const pos = Iso.gridToScreen(tile.gx, tile.gy, camera);
-        PixelArt.drawTile(ctx, tile.type, pos.x, pos.y, TILE_W, TILE_H);
+        // Only draw tiles visible in viewport
+        if (pos.x >= -TILE_W && pos.x <= w + TILE_W && pos.y >= -TILE_H && pos.y <= h + TILE_H) {
+          PixelArt.drawTile(ctx, tile.type, pos.x, pos.y, TILE_W, TILE_H);
+        }
       });
 
       // ── Collect all entities for depth sorting ──
@@ -1249,7 +1665,7 @@ const CivEngine = (() => {
         entities.push({ gx: a.gx, gy: a.gy, type: "character", data: a });
       });
 
-      // ── Depth sort and render ──
+      // ── Depth sort and render (by Y) ──
       Iso.depthSort(entities);
 
       const timeInfo = DayNight.getTimeInfo();
@@ -1260,11 +1676,11 @@ const CivEngine = (() => {
         const pos = Iso.gridToScreen(e.gx, e.gy, camera);
 
         if (e.type === "building") {
-          PixelArt.drawBuilding(ctx, e.data.type, pos.x - 8 * pixelScale, pos.y - 12 * pixelScale, pixelScale);
-          // glow at night for fire and windows
+          PixelArt.drawBuilding(ctx, e.data.type, pos.x - 10 * pixelScale, pos.y - 12 * pixelScale, pixelScale);
+          // glow at night for terminals and airlock beacons
           if (isNight) {
-            if (e.data.type === "campfire") {
-              DayNight.drawGlow(ctx, pos.x, pos.y, 60, 1);
+            if (e.data.type === "campfire" || e.data.type === "watchtower") {
+              DayNight.drawGlow(ctx, pos.x, pos.y, 40, 0.8);
             } else if (["hut", "house", "townhall", "castle", "cathedral"].includes(e.data.type)) {
               DayNight.drawGlow(ctx, pos.x, pos.y - 4 * pixelScale, 30, 0.4);
             }
@@ -1276,7 +1692,7 @@ const CivEngine = (() => {
           if (charData) {
             PixelArt.drawCharacter(
               ctx, charData,
-              pos.x - 8 * pixelScale, pos.y - 14 * pixelScale,
+              pos.x - 8 * pixelScale, pos.y - 10 * pixelScale,
               pixelScale, e.data.frame, e.data.facingRight,
             );
           }

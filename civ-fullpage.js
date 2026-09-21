@@ -205,7 +205,7 @@
       const charW = 16 * pixelScale;
       const charH = 16 * pixelScale;
       const cx = pos.x - 8 * pixelScale;
-      const cy = pos.y - 14 * pixelScale;
+      const cy = pos.y - 10 * pixelScale;
 
       if (
         canvasX >= cx && canvasX <= cx + charW &&

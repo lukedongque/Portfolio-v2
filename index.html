@@ -45,12 +45,21 @@
       <!-- ══════════════════════ HERO ══════════════════════ -->
       <section id="hero" class="hero section">
         <div class="container hero__inner">
-          <p class="hero__label">Hi, I'm</p>
-          <h1 class="hero__name">Luke Dongque</h1>
-          <p class="hero__tagline">
-            Full Stack Developer in Progress <span class="cursor">|</span>
+          <p class="hero__label" aria-label="Hi, I'm">Hi, I'm</p>
+          <h1 class="hero__name" aria-label="Luke Dongque">Luke Dongque</h1>
+          <p
+            class="hero__tagline"
+            aria-label="Full Stack Developer in Progress"
+          >
+            <span class="hero__tagline-text"
+              >Full Stack Developer in Progress</span
+            >
+            <span class="cursor">|</span>
           </p>
-          <p class="hero__sub">
+          <p
+            class="hero__sub"
+            aria-label="Building things for the web — one line at a time."
+          >
             Building things for the web — one line at a time.
           </p>
           <div class="hero__cta">
@@ -67,7 +76,11 @@
           <div class="about__grid">
             <div class="about__photo-wrapper">
               <div class="about__photo-placeholder">
-                <span>[ photo ]</span>
+                <img
+                  id="profileImage"
+                  src="assets/profile_eyesopen.jpg"
+                  alt="profile image"
+                />
               </div>
             </div>
 
@@ -244,7 +257,23 @@
             Have a project in mind or just want to say hi? Drop me a message.
           </p>
 
-          <form class="contact__form" novalidate>
+          <form
+            class="contact__form"
+            action="https://formsubmit.co/ajax/lukedongque@gmail.com"
+            method="POST"
+            novalidate
+          >
+            <!-- Anti-spam Honeypot (hidden from real users) -->
+            <input type="text" name="_honey" style="display: none" />
+            <!-- Disable FormSubmit captcha redirect page -->
+            <input type="hidden" name="_captcha" value="false" />
+            <!-- Email subject line -->
+            <input
+              type="hidden"
+              name="_subject"
+              value="New message from Portfolio!"
+            />
+
             <div class="form-group">
               <label class="form-label" for="name">Name</label>
               <input
@@ -253,6 +282,7 @@
                 id="name"
                 name="name"
                 placeholder="Your name"
+                required
               />
             </div>
             <div class="form-group">
@@ -263,6 +293,7 @@
                 id="email"
                 name="email"
                 placeholder="your@email.com"
+                required
               />
             </div>
             <div class="form-group">
@@ -272,6 +303,7 @@
                 id="message"
                 name="message"
                 placeholder="What's up?"
+                required
               ></textarea>
             </div>
             <button type="submit" class="btn btn--primary btn--full">
@@ -280,8 +312,18 @@
           </form>
 
           <div class="contact__socials">
-            <a href="#" class="social-link">GitHub</a>
-            <a href="#" class="social-link">LinkedIn</a>
+            <a
+              href="https://github.com/lukedongque"
+              target="_blank"
+              class="social-link"
+              >GitHub</a
+            >
+            <a
+              href="https://www.linkedin.com/in/luke-miguel-dongque-39a339225/?isSelfProfile=true"
+              target="_blank"
+              class="social-link"
+              >LinkedIn</a
+            >
           </div>
         </div>
       </section>
