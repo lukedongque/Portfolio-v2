@@ -105,8 +105,8 @@
                   opportunities
                 </li>
                 <li class="fact">
-                  <span class="fact__key">// interest</span>&nbsp; Web dev, UI
-                  design, gaming
+                  <span class="fact__key">// interest</span>&nbsp; Web dev,
+                  gaming, music, anime, movies, history, science? (Whatanerd)
                 </li>
               </ul>
             </div>
@@ -155,67 +155,186 @@
       <!-- ══════════════════════ PROJECTS ══════════════════════ -->
       <section id="projects" class="projects section">
         <div class="container">
-          <h2 class="section__title">Projects</h2>
-          <div class="projects__grid">
-            <article class="project-card">
-              <div class="project-card__thumb">[ preview ]</div>
-              <div class="project-card__body">
-                <h3 class="project-card__title">Project Alpha</h3>
-                <p class="project-card__desc">
-                  A cool web app I built to solve a real problem. Short
-                  description goes here — keep it punchy.
-                </p>
-                <div class="project-card__tags">
-                  <span class="tag">React</span>
-                  <span class="tag">Node.js</span>
-                  <span class="tag">MongoDB</span>
-                </div>
-                <div class="project-card__links">
-                  <a href="#" class="btn btn--sm btn--outline">Live Demo</a>
-                  <a href="#" class="btn btn--sm btn--ghost">GitHub</a>
-                </div>
+          <div class="projects__header">
+            <h2 class="section__title">Projects</h2>
+            <div
+              class="carousel-controls"
+              aria-label="Project carousel controls"
+            >
+              <div class="carousel-btn-group">
+                <button
+                  type="button"
+                  class="carousel-btn carousel-btn--prev"
+                  aria-label="Previous project"
+                  title="Move left"
+                >
+                  &#x2190;
+                </button>
+                <button
+                  type="button"
+                  class="carousel-btn carousel-btn--toggle"
+                  aria-label="Pause or resume carousel motion"
+                  title="Pause / Play"
+                >
+                  PAUSE
+                </button>
+                <button
+                  type="button"
+                  class="carousel-btn carousel-btn--next"
+                  aria-label="Next project"
+                  title="Move right"
+                >
+                  &#x2192;
+                </button>
               </div>
-            </article>
+            </div>
+          </div>
+        </div>
 
-            <article class="project-card">
-              <div class="project-card__thumb">[ preview ]</div>
-              <div class="project-card__body">
-                <h3 class="project-card__title">Project Beta</h3>
-                <p class="project-card__desc">
-                  Backend-focused project with REST API integration and database
-                  management. Add your real description here.
-                </p>
-                <div class="project-card__tags">
-                  <span class="tag">Python</span>
-                  <span class="tag">Express</span>
-                  <span class="tag">SQL</span>
+        <div class="projects__carousel-wrapper">
+          <div
+            class="projects__carousel-mask projects__carousel-mask--left"
+          ></div>
+          <div
+            class="projects__carousel-mask projects__carousel-mask--right"
+          ></div>
+          <div
+            class="projects__carousel-viewport"
+            id="projectsCarouselViewport"
+          >
+            <div class="projects__carousel-track" id="projectsCarouselTrack">
+              <article class="project-card">
+                <div class="project-card__thumb">
+                  <img
+                    src="assets/projects_images/nursesync.png"
+                    alt="nursesync"
+                  />
                 </div>
-                <div class="project-card__links">
-                  <a href="#" class="btn btn--sm btn--outline">Live Demo</a>
-                  <a href="#" class="btn btn--sm btn--ghost">GitHub</a>
+                <div class="project-card__body">
+                  <h3 class="project-card__title">NurseSync</h3>
+                  <p class="project-card__desc">
+                    A desktop application for Nursing Schools to effectively
+                    manage clinical rotations for their students.
+                  </p>
+                  <div class="project-card__tags">
+                    <span class="tag">C#</span>
+                    <span class="tag">WinUI</span>
+                    <span class="tag">MySQL</span>
+                  </div>
+                  <div class="project-card__links">
+                    <a
+                      href="https://github.com/lukedongque/SNRMS"
+                      class="btn btn--sm btn--outline"
+                      >GitHub</a
+                    >
+                  </div>
                 </div>
-              </div>
-            </article>
+              </article>
 
-            <article class="project-card">
-              <div class="project-card__thumb">[ preview ]</div>
-              <div class="project-card__body">
-                <h3 class="project-card__title">Project Gamma</h3>
-                <p class="project-card__desc">
-                  A UI-focused project with smooth interactions and great
-                  design. Replace with your real project details.
-                </p>
-                <div class="project-card__tags">
-                  <span class="tag">HTML</span>
-                  <span class="tag">CSS</span>
-                  <span class="tag">JS</span>
+              <article class="project-card">
+                <div class="project-card__thumb">
+                  <img
+                    src="assets/projects_images/dongques_tablea.png"
+                    alt="dongques_tablea"
+                  />
                 </div>
-                <div class="project-card__links">
-                  <a href="#" class="btn btn--sm btn--outline">Live Demo</a>
-                  <a href="#" class="btn btn--sm btn--ghost">GitHub</a>
+                <div class="project-card__body">
+                  <h3 class="project-card__title">Dong's Website (WIP)</h3>
+                  <p class="project-card__desc">
+                    A website that I am currently building using Vanilla CSS and
+                    JavaScript to showcase our family business.
+                  </p>
+                  <div class="project-card__tags">
+                    <span class="tag">JavaScript</span>
+                    <span class="tag">HTML</span>
+                    <span class="tag">CSS</span>
+                  </div>
+                  <div class="project-card__links">
+                    <a
+                      href="https://github.com/lukedongque/Dong-s-Tableya-Website"
+                      class="btn btn--sm btn--outline"
+                      >GitHub</a
+                    >
+                  </div>
                 </div>
-              </div>
-            </article>
+              </article>
+
+              <article class="project-card">
+                <div class="project-card__thumb">[ preview ]</div>
+                <div class="project-card__body">
+                  <h3 class="project-card__title">Gala</h3>
+                  <p class="project-card__desc">
+                    A mobile app I made with my friends that allows people plan
+                    a trip by talking to an AI Concierge.
+                  </p>
+                  <div class="project-card__tags">
+                    <span class="tag">Expo</span>
+                    <span class="tag">React Native</span>
+                    <span class="tag">TypeScript</span>
+                    <span class="tag">Supabase</span>
+                  </div>
+                  <div class="project-card__links">
+                    <a
+                      href="https://github.com/vesper-org/gala"
+                      class="btn btn--sm btn--outline"
+                      >GitHub</a
+                    >
+                  </div>
+                </div>
+              </article>
+
+              <article class="project-card">
+                <div class="project-card__thumb">[ preview ]</div>
+                <div class="project-card__body">
+                  <h3 class="project-card__title">Car Rental System</h3>
+                  <p class="project-card__desc">
+                    A fully functional console-based Car Rental Management
+                    System built using C# and .NET 8, designed to streamline
+                    vehicle rentals, customer registrations, employee
+                    management, and financial reporting.
+                  </p>
+                  <div class="project-card__tags">
+                    <span class="tag">C#</span>
+                  </div>
+                  <div class="project-card__links">
+                    <a
+                      href="https://github.com/lukedongque/Car-Rental-System"
+                      class="btn btn--sm btn--outline"
+                      >GitHub</a
+                    >
+                  </div>
+                </div>
+              </article>
+
+              <article class="project-card">
+                <div class="project-card__thumb">
+                  <img
+                    src="assets/projects_images/cinemine.png"
+                    alt="CineMine"
+                  />
+                </div>
+                <div class="project-card__body">
+                  <h3 class="project-card__title">CineMine (WIP)</h3>
+                  <p class="project-card__desc">
+                    A movie search website that allows users to view details
+                    about movies. I am building this to practice what I learned
+                    about JavaScript.
+                  </p>
+                  <div class="project-card__tags">
+                    <span class="tag">HTML</span>
+                    <span class="tag">Tailwind</span>
+                    <span class="tag">JavaScript</span>
+                  </div>
+                  <div class="project-card__links">
+                    <a
+                      href="https://github.com/lukedongque/Movie-Search-Webapp"
+                      class="btn btn--sm btn--outline"
+                      >GitHub</a
+                    >
+                  </div>
+                </div>
+              </article>
+            </div>
           </div>
         </div>
       </section>

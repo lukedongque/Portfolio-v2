@@ -42,7 +42,7 @@ navLinks.forEach((link) => {
 
 /* ── Scroll reveal ── */
 const revealEls = document.querySelectorAll(
-  ".about__grid, .skills__group, .project-card, .civilization__preview, .contact__inner",
+  ".about__grid, .skills__group, .projects__header, .projects__carousel-wrapper, .civilization__preview, .contact__inner",
 );
 
 revealEls.forEach((el) => el.classList.add("reveal"));
@@ -538,7 +538,7 @@ if (form) {
 
   // interactive elements — expand ring on hover
   const interactiveSelectors =
-    "a, button, .btn, .skill-badge, .project-card, .nav__hamburger, input, textarea, .typing-test-badge";
+    "a, button, .btn, .skill-badge, .project-card, .carousel-btn, .nav__hamburger, input, textarea, .typing-test-badge";
 
   document.addEventListener("mouseover", (e) => {
     if (e.target.closest(interactiveSelectors)) {
@@ -564,3 +564,257 @@ if (form) {
     ring.style.opacity = "1";
   });
 })();
+
+/* ═══════════════════════════════════════════════════════
+   DYNAMIC ANIMATED PROJECT CAROUSEL (Left to Right)
+═══════════════════════════════════════════════════════ */
+function initProjectCarousel() {
+  const viewport = document.getElementById("projectsCarouselViewport");
+  const track = document.getElementById("projectsCarouselTrack");
+  if (!viewport || !track) return;
+
+  const prevBtn = document.querySelector(".carousel-btn--prev");
+  const nextBtn = document.querySelector(".carousel-btn--next");
+  const toggleBtn = document.querySelector(".carousel-btn--toggle");
+  const statusEl = document.querySelector(".carousel-status");
+  const statusText = document.querySelector(".carousel-status__text");
+
+  const originalCards = Array.from(track.children);
+  if (originalCards.length === 0) return;
+
+  // Clone cards to ensure gapless infinite looping across all screen sizes
+  const CLONE_SETS = 3;
+  for (let s = 0; s < CLONE_SETS; s++) {
+    originalCards.forEach((card) => {
+      const clone = card.cloneNode(true);
+      clone.setAttribute("aria-hidden", "true");
+      clone.dataset.clone = "true";
+      // Prevent keyboard tabbing to duplicates
+      clone.querySelectorAll("a, button").forEach((el) => {
+        el.setAttribute("tabindex", "-1");
+      });
+      track.appendChild(clone);
+    });
+  }
+
+  let singleSetWidth = 0;
+  function measureSetWidth() {
+    const firstCard = originalCards[0];
+    const firstClone = track.children[originalCards.length];
+    if (firstCard && firstClone) {
+      singleSetWidth = firstClone.offsetLeft - firstCard.offsetLeft;
+    }
+    if (!singleSetWidth || singleSetWidth <= 0) {
+      const cardRect = firstCard ? firstCard.getBoundingClientRect() : { width: 380 };
+      singleSetWidth = (cardRect.width + 28) * originalCards.length;
+    }
+  }
+
+  measureSetWidth();
+  window.addEventListener("resize", measureSetWidth);
+  window.addEventListener("load", measureSetWidth);
+
+  // Motion preferences & state
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  let isPaused = prefersReducedMotion;
+  let isHovered = false;
+  let isDragging = false;
+
+  // Left to right movement: positive speed moves track to the right
+  const baseSpeed = 0.85;
+  let currentSpeed = isPaused ? 0 : baseSpeed;
+  let targetSpeed = isPaused ? 0 : baseSpeed;
+  let impulseVelocity = 0;
+
+  // Start positioned inside the cloned set
+  let posX = -singleSetWidth;
+  track.style.transform = `translate3d(${posX}px, 0, 0)`;
+
+  function updateStatusUI() {
+    if (!statusEl || !statusText || !toggleBtn) return;
+    if (isPaused) {
+      statusEl.classList.add("is-paused");
+      statusText.textContent = "CAROUSEL PAUSED";
+      toggleBtn.textContent = "PLAY";
+      toggleBtn.setAttribute("title", "Resume carousel motion");
+    } else {
+      statusEl.classList.remove("is-paused");
+      statusText.textContent = isHovered ? "HOVER PAUSED" : "LIVE CAROUSEL";
+      toggleBtn.textContent = "PAUSE";
+      toggleBtn.setAttribute("title", "Pause carousel motion");
+    }
+  }
+
+  if (isPaused) {
+    updateStatusUI();
+  }
+
+  // Animation Loop (requestAnimationFrame)
+  function animate() {
+    if (isPaused || isHovered || isDragging) {
+      targetSpeed = 0;
+    } else {
+      targetSpeed = baseSpeed;
+    }
+
+    // Smooth speed easing
+    currentSpeed += (targetSpeed - currentSpeed) * 0.08;
+
+    // Movement: left-to-right drift + any impulse from buttons or drag release
+    if (!isDragging) {
+      posX += currentSpeed + impulseVelocity;
+      impulseVelocity *= 0.88;
+      if (Math.abs(impulseVelocity) < 0.01) impulseVelocity = 0;
+    }
+
+    // Seamless loop wrapping
+    if (singleSetWidth > 0) {
+      while (posX >= 0) {
+        posX -= singleSetWidth;
+      }
+      while (posX < -singleSetWidth * 2) {
+        posX += singleSetWidth;
+      }
+    }
+
+    track.style.transform = `translate3d(${posX}px, 0, 0)`;
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+
+  // Hover detection: pause on mouse enter, resume on mouse leave
+  viewport.addEventListener("mouseenter", () => {
+    isHovered = true;
+    updateStatusUI();
+  });
+
+  viewport.addEventListener("mouseleave", () => {
+    isHovered = false;
+    updateStatusUI();
+  });
+
+  // Toggle Play / Pause Button
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      isPaused = !isPaused;
+      updateStatusUI();
+    });
+  }
+
+  // Prev / Next Step Buttons
+  function getStepDistance() {
+    const card = originalCards[0];
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      return rect.width + 28;
+    }
+    return 380;
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      // Step towards left
+      impulseVelocity -= getStepDistance() * 0.12;
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      // Step towards right
+      impulseVelocity += getStepDistance() * 0.12;
+    });
+  }
+
+  // Pointer Drag & Swipe Handling
+  let startX = 0;
+  let lastX = 0;
+  let dragDistance = 0;
+  let dragVelocity = 0;
+  let lastTime = 0;
+
+  viewport.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+
+    isDragging = true;
+    startX = e.clientX;
+    lastX = e.clientX;
+    dragDistance = 0;
+    dragVelocity = 0;
+    lastTime = performance.now();
+    viewport.classList.add("is-dragging");
+
+    if (viewport.setPointerCapture) {
+      try {
+        viewport.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+  });
+
+  viewport.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+
+    const currentX = e.clientX;
+    const dx = currentX - lastX;
+    dragDistance += Math.abs(dx);
+
+    const now = performance.now();
+    const dt = Math.max(now - lastTime, 1);
+    dragVelocity = (dx / dt) * 16;
+
+    lastX = currentX;
+    lastTime = now;
+
+    posX += dx;
+
+    // Seamless loop wrap during drag
+    if (singleSetWidth > 0) {
+      while (posX >= 0) {
+        posX -= singleSetWidth;
+      }
+      while (posX < -singleSetWidth * 2) {
+        posX += singleSetWidth;
+      }
+    }
+  });
+
+  function endDrag(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    viewport.classList.remove("is-dragging");
+
+    if (viewport.releasePointerCapture && e.pointerId !== undefined) {
+      try {
+        viewport.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+
+    // Apply inertia toss
+    impulseVelocity = Math.max(Math.min(dragVelocity, 25), -25);
+  }
+
+  viewport.addEventListener("pointerup", endDrag);
+  viewport.addEventListener("pointercancel", endDrag);
+
+  // Prevent link navigation if dragging occurred
+  track.addEventListener(
+    "click",
+    (e) => {
+      if (dragDistance > 6) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    },
+    true,
+  );
+}
+
+// Initialize on DOM ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initProjectCarousel);
+} else {
+  initProjectCarousel();
+}
+
