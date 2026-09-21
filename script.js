@@ -737,6 +737,11 @@ function initProjectCarousel() {
 
   viewport.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 && e.pointerType === "mouse") return;
+    // Don't intercept pointer or start dragging if user clicks a link or button
+    if (e.target.closest("a, button")) {
+      dragDistance = 0;
+      return;
+    }
 
     isDragging = true;
     startX = e.clientX;
@@ -793,6 +798,11 @@ function initProjectCarousel() {
 
     // Apply inertia toss
     impulseVelocity = Math.max(Math.min(dragVelocity, 25), -25);
+
+    // Reset dragDistance after pending click event cycle completes
+    setTimeout(() => {
+      dragDistance = 0;
+    }, 50);
   }
 
   viewport.addEventListener("pointerup", endDrag);
@@ -813,8 +823,200 @@ function initProjectCarousel() {
 
 // Initialize on DOM ready
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initProjectCarousel);
+  document.addEventListener("DOMContentLoaded", () => {
+    initProjectCarousel();
+    initAmbientMusic();
+  });
 } else {
   initProjectCarousel();
+  initAmbientMusic();
+}
+
+/* ═══════════════════════════════════════════════════════
+   AMBIENT BACKGROUND MUSIC CONTROLLER (SiriusS19YT)
+═══════════════════════════════════════════════════════ */
+function initAmbientMusic() {
+  const toggleBtn = document.getElementById("bgm-toggle");
+  if (!toggleBtn) return;
+
+  const labelEl = toggleBtn.querySelector(".bgm-label");
+  const audioSrc = "assets/music/ambient-synth-loop.ogg";
+  const TARGET_VOLUME = 0.22; // subtle, comfortable background volume
+  const FADE_TIME_MS = 800;
+
+  let audio = null;
+  let isPlaying = false;
+  let fadeInterval = null;
+  let wasPlayingBeforeHidden = false;
+
+  function getOrCreateAudio() {
+    if (!audio) {
+      audio = new Audio(audioSrc);
+      audio.loop = true;
+      audio.volume = 0;
+      audio.preload = "auto";
+    }
+    return audio;
+  }
+
+  function fadeTo(targetVol, durationMs, onComplete) {
+    if (!audio) return;
+    if (fadeInterval) clearInterval(fadeInterval);
+
+    const stepMs = 40;
+    const steps = Math.max(1, durationMs / stepMs);
+    const startVol = audio.volume;
+    const delta = (targetVol - startVol) / steps;
+
+    fadeInterval = setInterval(() => {
+      let nextVol = audio.volume + delta;
+      if (
+        (delta > 0 && nextVol >= targetVol) ||
+        (delta < 0 && nextVol <= targetVol) ||
+        isNaN(nextVol)
+      ) {
+        audio.volume = Math.max(0, Math.min(1, targetVol));
+        clearInterval(fadeInterval);
+        fadeInterval = null;
+        if (onComplete) onComplete();
+      } else {
+        audio.volume = Math.max(0, Math.min(1, nextVol));
+      }
+    }, stepMs);
+  }
+
+  function playMusic() {
+    const sound = getOrCreateAudio();
+    sound
+      .play()
+      .then(() => {
+        isPlaying = true;
+        updateUI(true);
+        fadeTo(TARGET_VOLUME, FADE_TIME_MS);
+        try {
+          localStorage.setItem("portfolio_bgm_state", "playing");
+        } catch (err) {}
+      })
+      .catch((err) => {
+        console.warn("Ambient music autoplay prevented by browser policy:", err);
+        // Browser blocked audio autoplay before interaction:
+        // Keep UI in ON state and resume sound on very first user gesture
+        isPlaying = false;
+        setupAutoResumeOnFirstGesture();
+      });
+  }
+
+  function pauseMusic() {
+    if (!audio) return;
+    isPlaying = false;
+    updateUI(false);
+    fadeTo(0, 500, () => {
+      if (!isPlaying && audio) {
+        audio.pause();
+      }
+    });
+    try {
+      localStorage.setItem("portfolio_bgm_state", "paused");
+    } catch (err) {}
+  }
+
+  function updateUI(playing) {
+    if (playing) {
+      toggleBtn.classList.add("is-playing");
+      toggleBtn.setAttribute("aria-label", "Mute ambient music");
+      if (labelEl) labelEl.textContent = "BGM: ON";
+    } else {
+      toggleBtn.classList.remove("is-playing");
+      toggleBtn.setAttribute("aria-label", "Play ambient music");
+      if (labelEl) labelEl.textContent = "BGM: OFF";
+    }
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    if (isPlaying) {
+      pauseMusic();
+    } else {
+      playMusic();
+    }
+  });
+
+  // Handle visibility changes (pause when tab hidden, resume when tab visible)
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      if (isPlaying && audio) {
+        wasPlayingBeforeHidden = true;
+        audio.pause();
+      }
+    } else {
+      if (wasPlayingBeforeHidden && audio) {
+        wasPlayingBeforeHidden = false;
+        audio.play().catch(() => {});
+      }
+    }
+  });
+
+  let hasAttachedGestureListeners = false;
+  function setupAutoResumeOnFirstGesture() {
+    if (hasAttachedGestureListeners) return;
+    hasAttachedGestureListeners = true;
+
+    const onFirstUserGesture = () => {
+      let state = "playing";
+      try {
+        state = localStorage.getItem("portfolio_bgm_state") || "playing";
+      } catch (e) {}
+
+      if (state !== "paused" && !isPlaying) {
+        playMusic();
+      }
+      cleanupGestureListeners();
+    };
+
+    function cleanupGestureListeners() {
+      hasAttachedGestureListeners = false;
+      window.removeEventListener("pointerdown", onFirstUserGesture);
+      window.removeEventListener("keydown", onFirstUserGesture);
+      window.removeEventListener("touchstart", onFirstUserGesture);
+      window.removeEventListener("wheel", onFirstUserGesture);
+      window.removeEventListener("scroll", onFirstUserGesture);
+    }
+
+    window.addEventListener("pointerdown", onFirstUserGesture, {
+      once: true,
+      passive: true,
+    });
+    window.addEventListener("keydown", onFirstUserGesture, {
+      once: true,
+      passive: true,
+    });
+    window.addEventListener("touchstart", onFirstUserGesture, {
+      once: true,
+      passive: true,
+    });
+    window.addEventListener("wheel", onFirstUserGesture, {
+      once: true,
+      passive: true,
+    });
+    window.addEventListener("scroll", onFirstUserGesture, {
+      once: true,
+      passive: true,
+    });
+  }
+
+  // Default to ON unless user explicitly paused in a previous session
+  let savedState = null;
+  try {
+    savedState = localStorage.getItem("portfolio_bgm_state");
+  } catch (err) {}
+
+  if (savedState === "paused") {
+    // User explicitly paused in a previous session
+    isPlaying = false;
+    updateUI(false);
+  } else {
+    // Default to ON!
+    updateUI(true);
+    playMusic();
+  }
 }
 

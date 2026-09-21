@@ -35,9 +35,25 @@
           <li><a href="#civilization" class="nav__link">Civilization</a></li>
           <li><a href="#contact" class="nav__link">Contact</a></li>
         </ul>
-        <button class="nav__hamburger" aria-label="Toggle menu">
-          <span></span><span></span><span></span>
-        </button>
+        <div class="nav__actions">
+          <button
+            id="bgm-toggle"
+            class="bgm-toggle is-playing"
+            type="button"
+            aria-label="Mute ambient music"
+            title="Toggle ambient music (SiriusS19YT)"
+          >
+            <span class="bgm-bars" aria-hidden="true">
+              <span class="bgm-bar"></span>
+              <span class="bgm-bar"></span>
+              <span class="bgm-bar"></span>
+            </span>
+            <span class="bgm-label">BGM: ON</span>
+          </button>
+          <button class="nav__hamburger" aria-label="Toggle menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
       </nav>
     </header>
 
@@ -225,6 +241,8 @@
                     <a
                       href="https://github.com/lukedongque/SNRMS"
                       class="btn btn--sm btn--outline"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       >GitHub</a
                     >
                   </div>
@@ -253,6 +271,8 @@
                     <a
                       href="https://github.com/lukedongque/Dong-s-Tableya-Website"
                       class="btn btn--sm btn--outline"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       >GitHub</a
                     >
                   </div>
@@ -277,6 +297,8 @@
                     <a
                       href="https://github.com/vesper-org/gala"
                       class="btn btn--sm btn--outline"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       >GitHub</a
                     >
                   </div>
@@ -300,6 +322,8 @@
                     <a
                       href="https://github.com/lukedongque/Car-Rental-System"
                       class="btn btn--sm btn--outline"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       >GitHub</a
                     >
                   </div>
@@ -329,6 +353,8 @@
                     <a
                       href="https://github.com/lukedongque/Movie-Search-Webapp"
                       class="btn btn--sm btn--outline"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       >GitHub</a
                     >
                   </div>
@@ -452,6 +478,7 @@
     <footer class="footer">
       <div class="container footer__inner">
         <p class="footer__text">© 2026 Luke Dongque</p>
+
         <a href="#hero" class="footer__top">↑ Back to top</a>
       </div>
     </footer>

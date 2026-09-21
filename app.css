@@ -188,6 +188,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .nav__logo {
@@ -216,7 +217,7 @@ img {
 .nav__link::after {
   content: "";
   position: absolute;
-  bottom: -4 px;
+  bottom: -4px;
   left: 0;
   width: 0;
   height: 1px;
@@ -230,6 +231,92 @@ img {
 .nav__link:hover::after,
 .nav__link.active::after {
   width: 100%;
+}
+
+.nav__actions {
+  position: absolute;
+  right: 2.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+/* Ambient BGM toggle button */
+.bgm-toggle {
+  background: transparent;
+  border: 1px solid var(--grey-shade);
+  color: var(--grey-base);
+  font-family: var(--font-family-2);
+  font-size: var(--text-sm);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: all var(--transition);
+  outline: none;
+  user-select: none;
+  line-height: 1;
+}
+
+.bgm-toggle:hover {
+  border-color: var(--grey-base);
+  color: var(--white);
+}
+
+.bgm-toggle.is-playing {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: var(--white);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+/* Animated equalizer bars */
+.bgm-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  width: 10px;
+}
+
+.bgm-bar {
+  width: 2px;
+  background-color: currentColor;
+  border-radius: 1px;
+  height: 3px;
+  transition: height 0.2s ease;
+}
+
+/* Static heights when paused */
+.bgm-toggle:not(.is-playing) .bgm-bar:nth-child(1) { height: 3px; }
+.bgm-toggle:not(.is-playing) .bgm-bar:nth-child(2) { height: 6px; }
+.bgm-toggle:not(.is-playing) .bgm-bar:nth-child(3) { height: 3px; }
+
+/* Equalizer dance when playing */
+.bgm-toggle.is-playing .bgm-bar:nth-child(1) {
+  animation: bgmBarPulse1 0.9s ease-in-out infinite alternate;
+}
+.bgm-toggle.is-playing .bgm-bar:nth-child(2) {
+  animation: bgmBarPulse2 0.75s ease-in-out infinite alternate;
+}
+.bgm-toggle.is-playing .bgm-bar:nth-child(3) {
+  animation: bgmBarPulse3 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes bgmBarPulse1 {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+@keyframes bgmBarPulse2 {
+  0% { height: 11px; }
+  100% { height: 4px; }
+}
+@keyframes bgmBarPulse3 {
+  0% { height: 4px; }
+  100% { height: 10px; }
 }
 
 /* hamburger — hidden on desktop */
@@ -954,6 +1041,16 @@ img {
   color: var(--grey-base);
 }
 
+.footer__credit {
+  font-family: var(--font-family-2);
+  font-size: var(--text-sm);
+  color: var(--grey-base);
+}
+
+.footer__credit-author {
+  color: var(--white);
+}
+
 .footer__top {
   font-family: var(--font-family-2);
   font-size: var(--text-sm);
@@ -1011,6 +1108,14 @@ img {
   }
   .nav__hamburger {
     display: flex;
+  }
+  .nav__actions {
+    right: 1.6rem;
+    gap: 1rem;
+  }
+  .bgm-toggle {
+    padding: 0.5rem 0.9rem;
+    font-size: 1.1rem;
   }
 
   .about__grid {
