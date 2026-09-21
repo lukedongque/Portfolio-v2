@@ -148,7 +148,21 @@
     });
   }
 
-  /** Lazy-load: only initialize when section scrolls into view */
+  // Immediately register/retrieve visitor on page load so all site visits count
+  CivEngine.Fingerprint.generate().then(async (fp) => {
+    try {
+      const existing = await CivEngine.DB.getVisitorByFingerprint(fp);
+      if (!existing) {
+        const all = await CivEngine.DB.getAllVisitors();
+        const charData = CivEngine.CharGen.generate(fp, all.length + 1);
+        await CivEngine.DB.addVisitor(charData);
+      }
+    } catch (e) {
+      // safe fallback if offline or Supabase not reached
+    }
+  });
+
+  /** Lazy-load: only initialize visual rendering when section scrolls into view */
   const section = document.getElementById("civilization");
   if (section) {
     const observer = new IntersectionObserver(
