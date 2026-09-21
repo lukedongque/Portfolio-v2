@@ -851,10 +851,22 @@ function initAmbientMusic() {
 
   function getOrCreateAudio() {
     if (!audio) {
-      audio = new Audio(audioSrc);
+      audio = document.createElement("audio");
       audio.loop = true;
-      audio.volume = 0;
       audio.preload = "auto";
+      audio.volume = 0;
+
+      // Add sources: MP3 first if added (for iOS Safari), then OGG
+      const sourceMp3 = document.createElement("source");
+      sourceMp3.src = "assets/music/ambient-synth-loop.mp3";
+      sourceMp3.type = "audio/mpeg";
+
+      const sourceOgg = document.createElement("source");
+      sourceOgg.src = "assets/music/ambient-synth-loop.ogg";
+      sourceOgg.type = "audio/ogg";
+
+      audio.appendChild(sourceMp3);
+      audio.appendChild(sourceOgg);
     }
     return audio;
   }
@@ -898,9 +910,8 @@ function initAmbientMusic() {
         } catch (err) {}
       })
       .catch((err) => {
-        console.warn("Ambient music autoplay prevented by browser policy:", err);
-        // Browser blocked audio autoplay before interaction:
-        // Keep UI in ON state and resume sound on very first user gesture
+        // Browser blocked audio autoplay before user interaction:
+        // Keep UI in ON state and ensure first real user gesture begins playback
         isPlaying = false;
         setupAutoResumeOnFirstGesture();
       });
@@ -960,47 +971,42 @@ function initAmbientMusic() {
     if (hasAttachedGestureListeners) return;
     hasAttachedGestureListeners = true;
 
-    const onFirstUserGesture = () => {
+    const onUserInteraction = () => {
       let state = "playing";
       try {
         state = localStorage.getItem("portfolio_bgm_state") || "playing";
       } catch (e) {}
 
-      if (state !== "paused" && !isPlaying) {
-        playMusic();
+      if (state !== "paused") {
+        const sound = getOrCreateAudio();
+        sound
+          .play()
+          .then(() => {
+            isPlaying = true;
+            updateUI(true);
+            fadeTo(TARGET_VOLUME, FADE_TIME_MS);
+            cleanupGestureListeners();
+          })
+          .catch((err) => {
+            // Still waiting for a valid user gesture
+            console.warn("Waiting for user gesture to start audio:", err);
+          });
       }
-      cleanupGestureListeners();
     };
 
     function cleanupGestureListeners() {
       hasAttachedGestureListeners = false;
-      window.removeEventListener("pointerdown", onFirstUserGesture);
-      window.removeEventListener("keydown", onFirstUserGesture);
-      window.removeEventListener("touchstart", onFirstUserGesture);
-      window.removeEventListener("wheel", onFirstUserGesture);
-      window.removeEventListener("scroll", onFirstUserGesture);
+      document.removeEventListener("pointerdown", onUserInteraction);
+      document.removeEventListener("click", onUserInteraction);
+      document.removeEventListener("touchstart", onUserInteraction);
+      document.removeEventListener("keydown", onUserInteraction);
     }
 
-    window.addEventListener("pointerdown", onFirstUserGesture, {
-      once: true,
-      passive: true,
-    });
-    window.addEventListener("keydown", onFirstUserGesture, {
-      once: true,
-      passive: true,
-    });
-    window.addEventListener("touchstart", onFirstUserGesture, {
-      once: true,
-      passive: true,
-    });
-    window.addEventListener("wheel", onFirstUserGesture, {
-      once: true,
-      passive: true,
-    });
-    window.addEventListener("scroll", onFirstUserGesture, {
-      once: true,
-      passive: true,
-    });
+    // Only genuine user activation events that modern browsers accept
+    document.addEventListener("pointerdown", onUserInteraction, { passive: true });
+    document.addEventListener("click", onUserInteraction, { passive: true });
+    document.addEventListener("touchstart", onUserInteraction, { passive: true });
+    document.addEventListener("keydown", onUserInteraction, { passive: true });
   }
 
   // Default to ON unless user explicitly paused in a previous session
