@@ -146,7 +146,91 @@
       pixelScale: Math.max(1.5, canvas.width / 600),
       subtleDayNight: true,
     });
+
+    // draw nameplate tooltip over clicked character in preview
+    if (selectedPreviewAgent) {
+      const visitor = visitors.find((v) => v.fingerprint === selectedPreviewAgent.fingerprint);
+      if (visitor) {
+        const pixelScale = Math.max(1.5, canvas.width / 600);
+        const pos = CivEngine.Iso.gridToScreen(selectedPreviewAgent.gx, selectedPreviewAgent.gy, camera);
+        const text = `${visitor.name} (${visitor.role})`;
+
+        ctx.save();
+        ctx.font = `bold ${Math.max(11, 12 * (window.devicePixelRatio / 1.5))}px 'Space Mono', monospace`;
+        const textW = ctx.measureText(text).width;
+        const boxW = textW + 16 * window.devicePixelRatio;
+        const boxH = 22 * window.devicePixelRatio;
+        const boxX = pos.x - boxW / 2;
+        const boxY = pos.y - 26 * pixelScale;
+
+        // Black drop shadow
+        ctx.fillStyle = "#0c0c0f";
+        ctx.fillRect(boxX + 2, boxY + 2, boxW, boxH);
+        // Black outer frame
+        ctx.fillRect(boxX - 1, boxY - 1, boxW + 2, boxH + 2);
+        // White bubble background
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+
+        // Pointer triangle
+        ctx.fillStyle = "#0c0c0f";
+        ctx.beginPath();
+        ctx.moveTo(pos.x - 4 * window.devicePixelRatio, boxY + boxH);
+        ctx.lineTo(pos.x + 4 * window.devicePixelRatio, boxY + boxH);
+        ctx.lineTo(pos.x, boxY + boxH + 4 * window.devicePixelRatio);
+        ctx.closePath();
+        ctx.fill();
+
+        // Text
+        ctx.fillStyle = "#0c0c0f";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, pos.x, boxY + boxH / 2);
+        ctx.restore();
+      }
+    }
   }
+
+  // ── Preview Click Selection ──
+  let selectedPreviewAgent = null;
+  let previewTooltipTimer = null;
+
+  function findAgentAt(screenX, screenY) {
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = (screenX - rect.left) * window.devicePixelRatio;
+    const canvasY = (screenY - rect.top) * window.devicePixelRatio;
+    const pixelScale = Math.max(1.5, canvas.width / 600);
+
+    for (let i = agents.length - 1; i >= 0; i--) {
+      const a = agents[i];
+      const pos = CivEngine.Iso.gridToScreen(a.gx, a.gy, camera);
+      const charW = 16 * pixelScale;
+      const charH = 16 * pixelScale;
+      const cx = pos.x - 8 * pixelScale;
+      const cy = pos.y - 10 * pixelScale;
+
+      if (
+        canvasX >= cx && canvasX <= cx + charW &&
+        canvasY >= cy && canvasY <= cy + charH
+      ) {
+        return a;
+      }
+    }
+    return null;
+  }
+
+  canvas.addEventListener("click", (e) => {
+    const agent = findAgentAt(e.clientX, e.clientY);
+    if (agent) {
+      selectedPreviewAgent = agent;
+      clearTimeout(previewTooltipTimer);
+      previewTooltipTimer = setTimeout(() => {
+        selectedPreviewAgent = null;
+      }, 4000);
+    } else {
+      selectedPreviewAgent = null;
+    }
+  });
 
   // Immediately register/retrieve visitor on page load so all site visits count
   CivEngine.Fingerprint.generate().then(async (fp) => {

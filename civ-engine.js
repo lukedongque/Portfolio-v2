@@ -1762,6 +1762,7 @@ const CivEngine = (() => {
     DayNight,
     Sound,
     Renderer,
+    GB,
     TILE_W,
     TILE_H,
   };

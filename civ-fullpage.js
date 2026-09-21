@@ -24,8 +24,9 @@
   let myVisitor = null;
   let lastTime = 0;
 
-  // drag-and-drop state
+  // drag-and-drop & selection state
   let dragAgent = null;
+  let selectedAgent = null;
   let isDragging = false;
   let panStartX = 0, panStartY = 0;
   let isPanning = false;
@@ -56,13 +57,19 @@
     if (timeEl) timeEl.textContent = timeInfo.emoji + " " + timeInfo.timeStr;
   }
 
-  function updateCharPanel(visitor) {
+  function updateCharPanel(visitor, isMe = false) {
     if (!visitor) return;
+    const badgeEl = document.getElementById("char-badge");
     const nameEl = document.getElementById("char-name");
     const roleEl = document.getElementById("char-role");
     const joinedEl = document.getElementById("char-joined");
     const portraitCanvas = document.getElementById("char-portrait");
 
+    if (badgeEl) {
+      badgeEl.textContent = isMe ? "Your Character" : "Villager Profile";
+      badgeEl.style.borderColor = isMe ? "var(--white, #ffffff)" : "var(--grey-base, #495057)";
+      badgeEl.style.color = isMe ? "var(--white, #ffffff)" : "var(--grey-tint, #f1f3f5)";
+    }
     if (nameEl) nameEl.textContent = visitor.name;
     if (roleEl) roleEl.textContent = visitor.role;
     if (joinedEl) {
@@ -71,6 +78,14 @@
     }
     if (portraitCanvas) {
       CivEngine.PixelArt.drawPortrait(portraitCanvas, visitor);
+    }
+
+    // Trigger subtle card pop animation
+    const card = document.querySelector(".civ-char");
+    if (card) {
+      card.classList.remove("civ-char--pop");
+      void card.offsetWidth;
+      card.classList.add("civ-char--pop");
     }
   }
 
@@ -105,8 +120,9 @@
     const activeVisitors = visitors.slice(-30);
     agents = activeVisitors.map((v) => CivEngine.AI.initState(v, world));
 
-    // show character panel
-    updateCharPanel(myVisitor);
+    // show character panel for user's character initially
+    selectedAgent = agents.find((a) => a.fingerprint === myFingerprint) || agents[0];
+    updateCharPanel(myVisitor, true);
 
     // listen for new visitors
     try {
@@ -178,6 +194,27 @@
       subtleDayNight: false,
     });
 
+    // draw selection indicator over selected/dragged character
+    if (selectedAgent) {
+      const pixelScale = Math.max(2, canvas.width / 500);
+      const pos = CivEngine.Iso.gridToScreen(selectedAgent.gx, selectedAgent.gy, camera);
+      const bob = Math.sin(now / 150) * 3;
+      const arrowY = pos.y - 18 * pixelScale + bob;
+
+      ctx.save();
+      // Outer black arrow ▼
+      ctx.fillStyle = CivEngine.GB ? CivEngine.GB.BLACK : "#0c0c0f";
+      ctx.fillRect(pos.x - 3 * pixelScale, arrowY - 4 * pixelScale, 6 * pixelScale, 2 * pixelScale);
+      ctx.fillRect(pos.x - 2 * pixelScale, arrowY - 2 * pixelScale, 4 * pixelScale, 2 * pixelScale);
+      ctx.fillRect(pos.x - 1 * pixelScale, arrowY, 2 * pixelScale, 2 * pixelScale);
+
+      // Inner white highlight
+      ctx.fillStyle = CivEngine.GB ? CivEngine.GB.WHITE : "#ffffff";
+      ctx.fillRect(pos.x - 2 * pixelScale, arrowY - 3 * pixelScale, 4 * pixelScale, 1 * pixelScale);
+      ctx.fillRect(pos.x - 1 * pixelScale, arrowY - 2 * pixelScale, 2 * pixelScale, 1 * pixelScale);
+      ctx.restore();
+    }
+
     // update HUD periodically (every ~30 frames)
     if (Math.floor(now / 1000) !== Math.floor((now - dt * 1000) / 1000)) {
       const eraInfo = CivEngine.Stages.getEraInfo(visitors.length);
@@ -222,9 +259,16 @@
     const agent = findAgentAt(e.clientX, e.clientY);
     if (agent) {
       dragAgent = agent;
+      selectedAgent = agent;
       dragAgent.isDragged = true;
       isDragging = true;
       document.body.classList.add("dragging");
+
+      // Show profile of clicked or dragged character
+      const visitor = visitors.find((v) => v.fingerprint === agent.fingerprint);
+      if (visitor) {
+        updateCharPanel(visitor, visitor.fingerprint === myFingerprint);
+      }
     } else {
       isPanning = true;
       panStartX = e.clientX;
@@ -281,8 +325,15 @@
       const agent = findAgentAt(touch.clientX, touch.clientY);
       if (agent) {
         dragAgent = agent;
+        selectedAgent = agent;
         dragAgent.isDragged = true;
         isDragging = true;
+
+        // Show profile of touched or dragged character
+        const visitor = visitors.find((v) => v.fingerprint === agent.fingerprint);
+        if (visitor) {
+          updateCharPanel(visitor, visitor.fingerprint === myFingerprint);
+        }
       } else {
         isPanning = true;
         touchStartX = touch.clientX;
