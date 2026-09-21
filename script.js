@@ -851,22 +851,24 @@ function initAmbientMusic() {
 
   function getOrCreateAudio() {
     if (!audio) {
-      audio = document.createElement("audio");
-      audio.loop = true;
-      audio.preload = "auto";
-      audio.volume = 0;
+      audio = document.getElementById("bgm-audio");
+      if (!audio) {
+        audio = document.createElement("audio");
+        audio.loop = true;
+        audio.preload = "auto";
+        audio.volume = 0;
 
-      // Add sources: MP3 first if added (for iOS Safari), then OGG
-      const sourceMp3 = document.createElement("source");
-      sourceMp3.src = "assets/music/ambient-synth-loop.mp3";
-      sourceMp3.type = "audio/mpeg";
+        const sourceMp3 = document.createElement("source");
+        sourceMp3.src = "assets/music/ambient-synth-loop.mp3";
+        sourceMp3.type = "audio/mpeg";
 
-      const sourceOgg = document.createElement("source");
-      sourceOgg.src = "assets/music/ambient-synth-loop.ogg";
-      sourceOgg.type = "audio/ogg";
+        const sourceOgg = document.createElement("source");
+        sourceOgg.src = "assets/music/ambient-synth-loop.ogg";
+        sourceOgg.type = "audio/ogg";
 
-      audio.appendChild(sourceMp3);
-      audio.appendChild(sourceOgg);
+        audio.appendChild(sourceMp3);
+        audio.appendChild(sourceOgg);
+      }
     }
     return audio;
   }
